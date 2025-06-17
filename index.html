@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Šach proti AI</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="main-container">
+    <div class="left-container">
+      <button id="rotate-board-btn" title="Rotate board" aria-label="Rotate board">
+        <span style="font-size:1.5em;display:flex;align-items:center;justify-content:center;">&#x21bb;</span>
+      </button>
+    </div>
+    <div class="player-card player-card-top">
+        <img src="ai-avatar.png" alt="AI Avatar" class="player-avatar">
+        <div class="player-info">
+          <span class="player-name">AI Opponent</span>
+          <span class="player-rating">1500</span>
+        </div>
+      </div>
+      <div class="player-card player-card-bottom">
+        <img src="user-avatar.png" alt="Your Avatar" class="player-avatar">
+        <div class="player-info">
+          <span class="player-name">You</span>
+          <span class="player-rating">1200</span>
+        </div>
+      </div>
+    <div class="board-container">
+      
+      <div class="board" id="board"></div>
+      
+    </div>
+
+    <div class="right-container"></div>
+  </div>
+ 
+ 
+  <script type="module" src="script.js"></script>
+ 
+</body>
+</html>
