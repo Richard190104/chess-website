@@ -1,8 +1,11 @@
 import { createScene } from "./scene.js";
 import { createBoard } from "./board.js";
+
 import { preloadModels, renderPieces } from "./pieces.js";
+
 import { setupInteraction } from "./controls.js";
-// import { createGame } from "./game.js";
+import { createGame } from "./game.js";
+
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 async function init() {
@@ -15,7 +18,7 @@ async function init() {
   scene.add(boardGroup);
 
   // chess logic
-  // const chess = createGame();
+  const chess = createGame();
 
   // load all piece models before first render
   await preloadModels();
