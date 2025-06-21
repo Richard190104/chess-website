@@ -17,18 +17,40 @@ export function setupInteraction(
   let selectedFrom = null;
   let legalMoves = [];
 
-  // helper to get board‐square info under pointer
+  // a dedicated group for the green translucent highlights
+  const highlights = new THREE.Group();
+  scene.add(highlights);
+
+  function clearHighlights() {
+    highlights.clear();
+  }
+
+  function showHighlights(moves) {
+    moves.forEach((m) => {
+      const file = m.to.charCodeAt(0) - 97;
+      const rank = parseInt(m.to[1], 10) - 1;
+      const geom = new THREE.PlaneGeometry(1, 1);
+      const mat = new THREE.MeshBasicMaterial({
+        color: 0x00ff00,
+        transparent: true,
+        opacity: 0.4,
+        depthWrite: false, // so it doesn’t occlude the piece underneath
+      });
+      const mesh = new THREE.Mesh(geom, mat);
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.set(file + 0.5, 0.02, rank + 0.5);
+      highlights.add(mesh);
+    });
+  }
+
   function getBoardInfo(evt) {
     pointer.x = (evt.clientX / window.innerWidth) * 2 - 1;
     pointer.y = -(evt.clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(pointer, camera);
 
-    // intersect your board squares
     const hits = raycaster.intersectObjects(boardGroup.children);
     if (!hits.length) return null;
-
     const mesh = hits[0].object;
-    // these were set in board.js via userData.file/rank
     const { file, rank } = mesh.userData;
     const square = String.fromCharCode(97 + file) + (rank + 1);
     return { file, rank, square, point: hits[0].point };
@@ -38,37 +60,37 @@ export function setupInteraction(
     const info = getBoardInfo(e);
     if (!info) return;
 
-    // check if there’s a piece on that square
-    const candidate = piecesGroup.children.find((m) => {
-      return (
-        Math.abs(m.position.x - (info.file + 0.5)) < 1e-6 &&
-        Math.abs(m.position.z - (info.rank + 0.5)) < 1e-6
-      );
-    });
+    // Find the piece at that square
+    const candidate = piecesGroup.children.find(
+      (m) =>
+        Math.abs(m.position.x - (info.file + 0.5)) < 1e-3 &&
+        Math.abs(m.position.z - (info.rank + 0.5)) < 1e-3,
+    );
     if (!candidate) return;
 
-    // legal moves for that square?
+    // Get legal moves for that square
     const moves = chess.moves({ square: info.square, verbose: true });
     if (!moves.length) return;
 
-    // start drag
+    // Start dragging
     selectedMesh = candidate;
     selectedFrom = info.square;
     legalMoves = moves;
 
-    // disable orbit while dragging
+    // Show green highlights
+    clearHighlights();
+    showHighlights(moves);
+
+    // Disable orbit controls while dragging
     controls.enabled = false;
-    // capture pointer so we keep getting move/up events
     domEl.setPointerCapture(e.pointerId);
   });
 
   domEl.addEventListener("pointermove", (e) => {
     if (!selectedMesh) return;
-
     const info = getBoardInfo(e);
     if (!info) return;
-
-    // move the mesh under the pointer (at y=0)
+    // Move the mesh under the cursor (kept slightly above board)
     selectedMesh.position.x = info.point.x;
     selectedMesh.position.z = info.point.z;
   });
@@ -79,20 +101,20 @@ export function setupInteraction(
     const info = getBoardInfo(e);
     const to = info ? info.square : null;
 
-    // if we dropped on a legal destination, make the move
+    // If dropped on a highlighted square, commit the move
     if (legalMoves.find((m) => m.to === to)) {
       chess.move({ from: selectedFrom, to });
     }
 
-    // clean up & re‐draw
+    // Clean up
     controls.enabled = true;
     domEl.releasePointerCapture(e.pointerId);
-
     selectedMesh = null;
     selectedFrom = null;
     legalMoves = [];
+    clearHighlights();
 
-    // re‐render from the updated game state
+    // Re-draw all pieces according to the new position
     renderPieces(chess, piecesGroup);
   });
 }
