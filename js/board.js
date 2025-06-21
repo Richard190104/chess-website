@@ -1,7 +1,6 @@
 import * as THREE from "three";
 
-export function createBoard() {
-  const group = new THREE.Group();
+export function createBoard(group) {
   const size = 1;
 
   for (let x = 0; x < 8; x++) {
@@ -16,6 +15,4 @@ export function createBoard() {
       group.add(square);
     }
   }
-
-  return group;
 }

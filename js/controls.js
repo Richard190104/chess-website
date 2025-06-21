@@ -45,7 +45,7 @@ export function setupInteraction(
     const to = getSquareFromIntersect(pt);
     if (moves.find((m) => m.to === to)) {
       chess.move({ from: selected, to });
-      renderPieces(chess, scene.getObjectByName("boardGroup"));
+      renderPieces(chess, piecesGroup);
     }
     selected = null;
     moves = [];
