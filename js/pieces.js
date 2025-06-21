@@ -1,27 +1,27 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/js/loaders/GLTFLoader.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 const loader = new GLTFLoader();
 const modelMap = {
-  p: "models/bP.gltf",
-  P: "models/wP.gltf",
-  n: "models/bN.gltf",
-  N: "models/wN.gltf",
-  b: "models/bB.gltf",
-  B: "models/wB.gltf",
-  r: "models/bR.gltf",
-  R: "models/wR.gltf",
-  q: "models/bQ.gltf",
-  Q: "models/wQ.gltf",
-  k: "models/bK.gltf",
-  K: "models/wK.gltf",
+  // p: "models/bP.glb",
+  // P: "models/wP.glb",
+  // n: "models/bN.glb",
+  // N: "models/wN.glb",
+  // b: "models/bB.glb",
+  // B: "models/wB.glb",
+  // r: "models/bR.glb",
+  // R: "models/wR.glb",
+  // q: "models/bQ.glb",
+  // Q: "models/wQ.glb",
+  // k: "models/bK.glb",
+  K: "models/wK.glb",
 };
 const cache = {};
 
 export async function preloadModels() {
   const promises = Object.entries(modelMap).map(([code, path]) =>
-    loader.loadAsync(path).then((gltf) => {
-      cache[code] = gltf.scene;
+    loader.loadAsync(path).then((glb) => {
+      cache[code] = glb.scene;
     }),
   );
   await Promise.all(promises);
