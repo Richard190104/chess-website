@@ -3,9 +3,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 import { createScene } from "./scene.js";
 import { createBoard } from "./board.js";
-
 import { preloadModels, renderPieces } from "./pieces.js";
-
 import { setupInteraction } from "./controls.js";
 import { createGame } from "./game.js";
 
@@ -13,44 +11,45 @@ async function init() {
   const container = document.getElementById("canvas-container");
   const { scene, camera, renderer } = createScene(container);
 
-  // board
-  const boardGroup = new THREE.Group();
-  createBoard(boardGroup);
-  boardGroup.name = "boardGroup";
+  // Board never cleared
+  const boardGroup = createBoard();
   scene.add(boardGroup);
 
+  // Pieces get cleared+repainted
   const piecesGroup = new THREE.Group();
-  piecesGroup.name = "piecesGroup";
   scene.add(piecesGroup);
 
-  // chess logic
+  // Chess logic
   const chess = createGame();
 
-  // load all piece models before first render
+  // Load & draw initial setup
   await preloadModels();
   renderPieces(chess, piecesGroup);
 
-  // orbit controls
-  new OrbitControls(camera, renderer.domElement).target.set(3.5, 0, 3.5);
+  // Camera controls
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(3.5, 0, 3.5);
 
-  // interaction
+  // Interactivity
   setupInteraction(
     renderer.domElement,
     camera,
     scene,
     chess,
     renderPieces,
+    boardGroup,
     piecesGroup,
+    controls,
   );
 
-  // resize handling
+  // Resize
   window.addEventListener("resize", () => {
     camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(container.clientWidth, container.clientHeight);
   });
 
-  // render loop
+  // Render loop
   (function animate() {
     requestAnimationFrame(animate);
     renderer.render(scene, camera);

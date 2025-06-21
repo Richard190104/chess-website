@@ -1,56 +1,98 @@
 import * as THREE from "three";
 
 export function setupInteraction(
-  rendererDom,
+  domEl,
   camera,
   scene,
   chess,
   renderPieces,
+  boardGroup,
+  piecesGroup,
+  controls,
 ) {
-  const ray = new THREE.Raycaster();
+  const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
-  let selected = null;
-  let moves = [];
 
-  function getSquareFromIntersect(intersectPoint) {
-    const x = Math.floor(intersectPoint.x);
-    const z = Math.floor(intersectPoint.z);
-    return String.fromCharCode(97 + x) + (z + 1);
+  let selectedMesh = null;
+  let selectedFrom = null;
+  let legalMoves = [];
+
+  // helper to get board‐square info under pointer
+  function getBoardInfo(evt) {
+    pointer.x = (evt.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(evt.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+
+    // intersect your board squares
+    const hits = raycaster.intersectObjects(boardGroup.children);
+    if (!hits.length) return null;
+
+    const mesh = hits[0].object;
+    // these were set in board.js via userData.file/rank
+    const { file, rank } = mesh.userData;
+    const square = String.fromCharCode(97 + file) + (rank + 1);
+    return { file, rank, square, point: hits[0].point };
   }
 
-  function onDown(e) {
-    pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
-    pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
-    ray.setFromCamera(pointer, camera);
-    const hits = ray.intersectObjects(scene.children, true);
-    if (!hits.length) return;
-    // the first hit in boardGroup: you might tag or filter those meshes
-    const pt = hits[0].point;
-    const sq = getSquareFromIntersect(pt);
-    moves = chess.moves({ square: sq, verbose: true });
-    if (moves.length) selected = sq;
-  }
+  domEl.addEventListener("pointerdown", (e) => {
+    const info = getBoardInfo(e);
+    if (!info) return;
 
-  function onUp(e) {
-    if (!selected) return;
-    pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
-    pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
-    ray.setFromCamera(pointer, camera);
-    const hits = ray.intersectObjects(scene.children, true);
-    if (!hits.length) {
-      selected = null;
-      return;
+    // check if there’s a piece on that square
+    const candidate = piecesGroup.children.find((m) => {
+      return (
+        Math.abs(m.position.x - (info.file + 0.5)) < 1e-6 &&
+        Math.abs(m.position.z - (info.rank + 0.5)) < 1e-6
+      );
+    });
+    if (!candidate) return;
+
+    // legal moves for that square?
+    const moves = chess.moves({ square: info.square, verbose: true });
+    if (!moves.length) return;
+
+    // start drag
+    selectedMesh = candidate;
+    selectedFrom = info.square;
+    legalMoves = moves;
+
+    // disable orbit while dragging
+    controls.enabled = false;
+    // capture pointer so we keep getting move/up events
+    domEl.setPointerCapture(e.pointerId);
+  });
+
+  domEl.addEventListener("pointermove", (e) => {
+    if (!selectedMesh) return;
+
+    const info = getBoardInfo(e);
+    if (!info) return;
+
+    // move the mesh under the pointer (at y=0)
+    selectedMesh.position.x = info.point.x;
+    selectedMesh.position.z = info.point.z;
+  });
+
+  domEl.addEventListener("pointerup", (e) => {
+    if (!selectedMesh) return;
+
+    const info = getBoardInfo(e);
+    const to = info ? info.square : null;
+
+    // if we dropped on a legal destination, make the move
+    if (legalMoves.find((m) => m.to === to)) {
+      chess.move({ from: selectedFrom, to });
     }
-    const pt = hits[0].point;
-    const to = getSquareFromIntersect(pt);
-    if (moves.find((m) => m.to === to)) {
-      chess.move({ from: selected, to });
-      renderPieces(chess, piecesGroup);
-    }
-    selected = null;
-    moves = [];
-  }
 
-  rendererDom.addEventListener("pointerdown", onDown);
-  rendererDom.addEventListener("pointerup", onUp);
+    // clean up & re‐draw
+    controls.enabled = true;
+    domEl.releasePointerCapture(e.pointerId);
+
+    selectedMesh = null;
+    selectedFrom = null;
+    legalMoves = [];
+
+    // re‐render from the updated game state
+    renderPieces(chess, piecesGroup);
+  });
 }
