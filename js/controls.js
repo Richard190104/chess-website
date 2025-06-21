@@ -15,31 +15,48 @@ export function setupInteraction(
 
   let selectedMesh = null;
   let selectedFrom = null;
+  let originalPosition = new THREE.Vector3();
   let legalMoves = [];
 
-  // a dedicated group for the green translucent highlights
+  // highlight groups
   const highlights = new THREE.Group();
-  scene.add(highlights);
+  const selectionCircle = new THREE.Mesh(
+    new THREE.RingGeometry(0.3, 0.4, 32),
+    new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide }),
+  );
+  selectionCircle.rotation.x = -Math.PI / 2;
+  selectionCircle.visible = false;
 
-  function clearHighlights() {
-    highlights.clear();
+  scene.add(highlights, selectionCircle);
+
+  function clearSelection() {
+    if (selectedMesh) {
+      controls.enabled = true;
+      selectionCircle.visible = false;
+      highlights.clear();
+      selectedMesh.position.copy(originalPosition);
+      selectedMesh = null;
+      selectedFrom = null;
+      legalMoves = [];
+    }
   }
 
   function showHighlights(moves) {
+    highlights.clear();
     moves.forEach((m) => {
-      const file = m.to.charCodeAt(0) - 97;
-      const rank = parseInt(m.to[1], 10) - 1;
+      const f = m.to.charCodeAt(0) - 97;
+      const r = parseInt(m.to[1], 10) - 1;
       const geom = new THREE.PlaneGeometry(1, 1);
       const mat = new THREE.MeshBasicMaterial({
         color: 0x00ff00,
         transparent: true,
         opacity: 0.4,
-        depthWrite: false, // so it doesn’t occlude the piece underneath
+        depthWrite: false,
       });
-      const mesh = new THREE.Mesh(geom, mat);
-      mesh.rotation.x = -Math.PI / 2;
-      mesh.position.set(file + 0.5, 0.02, rank + 0.5);
-      highlights.add(mesh);
+      const sq = new THREE.Mesh(geom, mat);
+      sq.rotation.x = -Math.PI / 2;
+      sq.position.set(f + 0.5, 0.02, r + 0.5);
+      highlights.add(sq);
     });
   }
 
@@ -47,74 +64,89 @@ export function setupInteraction(
     pointer.x = (evt.clientX / window.innerWidth) * 2 - 1;
     pointer.y = -(evt.clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(pointer, camera);
-
     const hits = raycaster.intersectObjects(boardGroup.children);
     if (!hits.length) return null;
-    const mesh = hits[0].object;
-    const { file, rank } = mesh.userData;
-    const square = String.fromCharCode(97 + file) + (rank + 1);
-    return { file, rank, square, point: hits[0].point };
+    const { file, rank } = hits[0].object.userData;
+    return {
+      square: String.fromCharCode(97 + file) + (rank + 1),
+      point: hits[0].point,
+    };
   }
 
+  domEl.addEventListener("contextmenu", (e) => e.preventDefault());
+
   domEl.addEventListener("pointerdown", (e) => {
+    // right-click or click off-board cancels
+    if (e.button === 2) {
+      clearSelection();
+      return;
+    }
     const info = getBoardInfo(e);
-    if (!info) return;
 
-    // Find the piece at that square
-    const candidate = piecesGroup.children.find(
-      (m) =>
-        Math.abs(m.position.x - (info.file + 0.5)) < 1e-3 &&
-        Math.abs(m.position.z - (info.rank + 0.5)) < 1e-3,
-    );
-    if (!candidate) return;
+    // if we already have a selection, and click a legal square → move
+    if (selectedMesh && info && legalMoves.find((m) => m.to === info.square)) {
+      chess.move({ from: selectedFrom, to: info.square });
+      renderPieces(chess, piecesGroup);
+      clearSelection();
+      return;
+    }
 
-    // Get legal moves for that square
-    const moves = chess.moves({ square: info.square, verbose: true });
-    if (!moves.length) return;
+    // if click off-board (and we had selection), cancel
+    if (!info && selectedMesh) {
+      clearSelection();
+      return;
+    }
 
-    // Start dragging
-    selectedMesh = candidate;
-    selectedFrom = info.square;
-    legalMoves = moves;
+    // if not selecting currently, try picking a piece
+    if (!selectedMesh && info) {
+      // find piece at that square
+      const candidate = piecesGroup.children.find(
+        (m) =>
+          Math.abs(m.position.x - info.point.x) < 0.5 &&
+          Math.abs(m.position.z - info.point.z) < 0.5,
+      );
+      if (!candidate) return;
 
-    // Show green highlights
-    clearHighlights();
-    showHighlights(moves);
+      const moves = chess.moves({ square: info.square, verbose: true });
+      if (!moves.length) return;
 
-    // Disable orbit controls while dragging
-    controls.enabled = false;
-    domEl.setPointerCapture(e.pointerId);
+      // select it
+      selectedMesh = candidate;
+      selectedFrom = info.square;
+      originalPosition.copy(candidate.position);
+      legalMoves = moves;
+      showHighlights(moves);
+
+      // show ring under the piece
+      selectionCircle.position.set(
+        originalPosition.x,
+        0.01,
+        originalPosition.z,
+      );
+      selectionCircle.visible = true;
+
+      controls.enabled = false;
+      domEl.setPointerCapture(e.pointerId);
+    }
   });
 
   domEl.addEventListener("pointermove", (e) => {
     if (!selectedMesh) return;
     const info = getBoardInfo(e);
     if (!info) return;
-    // Move the mesh under the cursor (kept slightly above board)
+    // drag the piece under the cursor
     selectedMesh.position.x = info.point.x;
     selectedMesh.position.z = info.point.z;
   });
 
   domEl.addEventListener("pointerup", (e) => {
     if (!selectedMesh) return;
-
     const info = getBoardInfo(e);
-    const to = info ? info.square : null;
-
-    // If dropped on a highlighted square, commit the move
-    if (legalMoves.find((m) => m.to === to)) {
-      chess.move({ from: selectedFrom, to });
+    if (info && legalMoves.find((m) => m.to === info.square)) {
+      chess.move({ from: selectedFrom, to: info.square });
+      renderPieces(chess, piecesGroup);
     }
-
-    // Clean up
-    controls.enabled = true;
     domEl.releasePointerCapture(e.pointerId);
-    selectedMesh = null;
-    selectedFrom = null;
-    legalMoves = [];
-    clearHighlights();
-
-    // Re-draw all pieces according to the new position
-    renderPieces(chess, piecesGroup);
+    clearSelection();
   });
 }
