@@ -1,0 +1,197 @@
+<!--
+Directory structure:
+
+project-root/
+├── index.html         ← Main HTML file
+├── js/
+│   └── main.js        ← Application logic
+└── models/            ← Put your GLTF/GLB piece models here
+    ├── wP.gltf (white pawn)
+    ├── wN.gltf (white knight)
+    ├── wB.gltf (white bishop)
+    ├── wR.gltf (white rook)
+    ├── wQ.gltf (white queen)
+    ├── wK.gltf (white king)
+    ├── bP.gltf (black pawn)
+    ├── bN.gltf (black knight)
+    ├── bB.gltf (black bishop)
+    ├── bR.gltf (black rook)
+    ├── bQ.gltf (black queen)
+    └── bK.gltf (black king)
+-->
+
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Three.js Chess Starter</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #canvas-container { width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <!-- Three.js core -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
+  <!-- OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/examples/js/controls/OrbitControls.js"></script>
+  <!-- GLTFLoader -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/examples/js/loaders/GLTFLoader.js"></script>
+  <!-- Chess logic (chess.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/chess.js@latest/chess.min.js"></script>
+
+  <!-- Your app code -->
+  <script src="js/main.js"></script>
+</body>
+</html>
+
+/* main.js */
+(() => {
+  const container = document.getElementById('canvas-container');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(4, 7, 10);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  container.appendChild(renderer.domElement);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.target.set(3.5, 0, 3.5);
+  controls.update();
+
+  // Lights
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const dir = new THREE.DirectionalLight(0xffffff, 0.6);
+  dir.position.set(5, 10, 7);
+  scene.add(dir);
+
+  // Board
+  const board = new THREE.Group();
+  const squareSize = 1;
+  for (let x = 0; x < 8; x++) {
+    for (let z = 0; z < 8; z++) {
+      const geom = new THREE.PlaneGeometry(squareSize, squareSize);
+      const mat = new THREE.MeshStandardMaterial({ color: (x + z) % 2 ? 0x777777 : 0xeeeeee });
+      const square = new THREE.Mesh(geom, mat);
+      square.rotation.x = -Math.PI / 2;
+      square.position.set(x + squareSize/2, 0, z + squareSize/2);
+      board.add(square);
+    }
+  }
+  scene.add(board);
+
+  // Chess.js game instance
+  const chess = new Chess();
+
+  // Load piece models
+  const loader = new THREE.GLTFLoader();
+  const pieceModels = {};
+  const modelPaths = {
+    p: 'models/bP.gltf', n: 'models/bN.gltf', b: 'models/bB.gltf', r: 'models/bR.gltf', q: 'models/bQ.gltf', k: 'models/bK.gltf',
+    P: 'models/wP.gltf', N: 'models/wN.gltf', B: 'models/wB.gltf', R: 'models/wR.gltf', Q: 'models/wQ.gltf', K: 'models/wK.gltf'
+  };
+  Object.entries(modelPaths).forEach(([code, path]) => {
+    loader.load(path, gltf => { pieceModels[code] = gltf.scene; });
+  });
+
+  const boardGroup = new THREE.Group();
+  scene.add(boardGroup);
+
+  function clearPieces() {
+    boardGroup.clear();
+  }
+
+  function updatePieces() {
+    clearPieces();
+    const positions = chess.board();
+    for (let rank = 0; rank < 8; rank++) {
+      for (let file = 0; file < 8; file++) {
+        const piece = positions[7 - rank][file];
+        if (piece) {
+          const model = pieceModels[piece.type === piece.type ? (piece.color === 'w' ? piece.type.toUpperCase() : piece.type) : piece.type];
+          if (model) {
+            const mesh = model.clone();
+            mesh.position.set(file + squareSize/2, 0, rank + squareSize/2);
+            mesh.scale.set(0.8,0.8,0.8);
+            boardGroup.add(mesh);
+          }
+        }
+      }
+    }
+  }
+
+  // Interactivity
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  let selected = null;
+  let legalMoves = [];
+
+  function onPointerDown(event) {
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    const intersects = raycaster.intersectObjects(boardGroup.children);
+    if (intersects.length) {
+      const picked = intersects[0].object;
+      // Find board coordinate of that mesh
+      // TODO: Map mesh.uuid to square coordinate
+      const from = null; // replace with mapping
+      legalMoves = chess.moves({ square: from, verbose: true });
+      selected = { mesh: picked, from };
+    }
+  }
+
+  function onPointerUp(event) {
+    if (!selected) return;
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    const zInter = raycaster.intersectObject(board);
+    if (zInter.length) {
+      const pos = zInter[0].point;
+      const toFile = Math.floor(pos.x);
+      const toRank = Math.floor(pos.z);
+      const to = String.fromCharCode(97 + toFile) + (toRank + 1);
+      // Check if move is legal
+      if (legalMoves.find(m => m.to === to)) {
+        chess.move({ from: selected.from, to });
+        updatePieces();
+      }
+    }
+    selected = null;
+    legalMoves = [];
+  }
+
+  window.addEventListener('pointerdown', onPointerDown);
+  window.addEventListener('pointerup', onPointerUp);
+
+  function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+  }
+
+  // Resize handling
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // Kick things off
+  animate();
+  updatePieces();
+})();
+
+/*
+  TODO:
+  - Implement mapping of meshes to algebraic coordinates when picking.
+  - Highlight legal squares when a piece is selected.
+  - Hook loading progress and errors.
+  - Replace model paths if you organize differently.
+*/
+
