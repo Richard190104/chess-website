@@ -9,12 +9,12 @@ export function createScene(container) {
     100,
   );
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+
   renderer.setSize(container.clientWidth, container.clientHeight);
   container.appendChild(renderer.domElement);
 
-  // lights
-  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.4));
   const dir = new THREE.DirectionalLight(0xffffff, 0.6);
   dir.position.set(5, 10, 7);
   scene.add(dir);

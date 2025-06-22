@@ -41,17 +41,7 @@ export function createBoard() {
     }
   }
 
-  // Optional: Add a subtle ambient shadow under the board
-  const shadowGeom = new THREE.CircleGeometry(4.5, 32);
-  const shadowMat = new THREE.MeshBasicMaterial({
-    color: 0x000000,
-    opacity: 0.15,
-    transparent: true,
-  });
-  const shadow = new THREE.Mesh(shadowGeom, shadowMat);
-  shadow.rotation.x = -Math.PI / 2;
-  shadow.position.set(4, -0.14, 4);
-  group.add(shadow);
+
 
   return group;
 }

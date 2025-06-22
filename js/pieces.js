@@ -18,13 +18,19 @@ const modelMap = {
 };
 const cache = {};
 
+// Custom colors and more matte look
+const WHITE_COLOR = 0xf5f5f5; // off-white
+const BLACK_COLOR = 0x222831; // dark gray-blue
+const METALNESS = 0.0;
+const ROUGHNESS = 0.98;
+
 function setModelColor(model, color) {
   model.traverse((child) => {
     if (child.isMesh) {
       child.material = new THREE.MeshStandardMaterial({
         color: color,
-        metalness: 0.01,
-        roughness: 0.9,
+        metalness: METALNESS,
+        roughness: ROUGHNESS,
       });
     }
   });
@@ -32,7 +38,7 @@ function setModelColor(model, color) {
 
 export async function preloadModels() {
   const squareSize = 1; // your board squares are 1×1
-  const scl = 0.8; // scale to 80% of square width
+  const scl = 0.7; // scale to 70% of square width (smaller than before)
 
   const promises = Object.entries(modelMap).map(([code, path]) =>
     loader.loadAsync(path).then((gltf) => {
@@ -51,11 +57,10 @@ export async function preloadModels() {
 
       model.position.y = -minY;
 
-      // Set color: black pieces get black, white pieces get white
       if (code === code.toUpperCase()) {
-        setModelColor(model, 0xffffff); // white
+        setModelColor(model, WHITE_COLOR); // custom white
       } else {
-        setModelColor(model, 0x222222); // black
+        setModelColor(model, BLACK_COLOR); // custom black
       }
 
       cache[code] = model;
