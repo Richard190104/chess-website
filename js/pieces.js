@@ -70,13 +70,13 @@ export function renderPieces(chess, piecesGroup) {
   const layout = chess.board();
   for (let rank = 0; rank < 8; rank++) {
     for (let file = 0; file < 8; file++) {
-      const piece = layout[7-rank][file];
+      const piece = layout[7 - rank][7 - file];
       if (!piece) continue;
 
       const code = piece.color === "w" ? piece.type.toUpperCase() : piece.type;
 
       const template = cache[code];
-      if (!template) continue; 
+      if (!template) continue;
 
       const mesh = template.clone();
       mesh.position.x = file + 0.5;

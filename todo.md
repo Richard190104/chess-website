@@ -4,6 +4,6 @@
 - [ ] add checkmate indication
 - [ ] add a way to resign/restart
 - [ ] add move history
-- [ ] misplaced queens and kings // castles work just on different sides, looks like we are placing them mirrored
+- [x] misplaced queens and kings // castles work just on different sides, looks like we are placing them mirrored
 - [ ] camera should rotate around the board, not all the way around
 - [ ] camera should be facing the white pieces from behind, not from the front
