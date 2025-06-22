@@ -11,6 +11,10 @@ async function init() {
   const container = document.getElementById("canvas-container");
   const { scene, camera, renderer } = createScene(container);
 
+  // Set camera position so the board is visible
+  camera.position.set(3.5, 10, 13);
+  camera.lookAt(3.5, 0, 3.5);
+
   // Board never cleared
   const boardGroup = createBoard();
   scene.add(boardGroup);
@@ -26,9 +30,14 @@ async function init() {
   await preloadModels();
   renderPieces(chess, piecesGroup);
 
-  // Camera controls
+  // Camera controls: allow only rotation, no movement
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.target.set(3.5, 0, 3.5);
+  controls.enablePan = false;
+  controls.enableZoom = false;
+  controls.minDistance = camera.position.distanceTo(controls.target);
+  controls.maxDistance = camera.position.distanceTo(controls.target);
+  controls.update();
 
   // Interactivity
   setupInteraction(
