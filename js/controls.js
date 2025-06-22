@@ -35,7 +35,9 @@ export function setupInteraction(
   scene.add(highlights, selectionCircle);
 
   function clearSelection() {
+    // this doesnt do shit
     if (selectedMesh) {
+      console.log("Clearing selection");
       controls.enabled = true;
       selectionCircle.visible = false;
       highlights.clear();
@@ -61,7 +63,7 @@ export function setupInteraction(
       });
       const dot = new THREE.Mesh(geom, mat);
       dot.rotation.x = -Math.PI / 2;
-      dot.position.set(f + 0.5, 0.03, r + 0.5);
+      dot.position.set(7 - f, 0.03, r);
       highlights.add(dot);
     });
   }
@@ -105,6 +107,7 @@ export function setupInteraction(
   domEl.addEventListener("pointerdown", (e) => {
     // right-click or click off-board cancels
     // doesnt work for right-click
+    console.log(e.button);
     if (e.button === 2) {
       clearSelection();
       return;
@@ -172,7 +175,7 @@ export function setupInteraction(
     if (info && legalMoves.find((m) => m.to === info.square)) {
       chess.move({ from: selectedFrom, to: info.square });
       renderPieces(chess, piecesGroup);
-      console.log(chess.board());
+
       if (chess.turn() === "b") {
         askStockfishToMove();
       }

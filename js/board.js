@@ -35,7 +35,7 @@ export function createBoard() {
       square.rotation.x = -Math.PI / 2;
       square.position.set(x, 0.01, z);
 
-      square.userData = { file: x, rank: z };
+      square.userData = { file: 7 - x, rank: z };
 
       group.add(square);
     }
