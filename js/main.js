@@ -12,7 +12,7 @@ async function init() {
   const { scene, camera, renderer } = createScene(container);
 
   // Set camera position so the board is visible
-  camera.position.set(3.5, 10, 13);
+  camera.position.set(3.5, 10, -5);
   camera.lookAt(3.5, 0, 3.5);
 
   // Board never cleared
