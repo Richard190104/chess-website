@@ -1,5 +1,10 @@
 
 # TODO:
+- [ ] mobile screen
+- [x] right click to remove highlights of possible moves // also highlight right-clicked square
+- [ ] Let the player choose the difficulty
+- [ ] sounds
+- [ ] 2D
 - [ ] change background to be less dark, black pieces are hard to see sometimes
 - [ ] add a way to resign/restart
 - [ ] add checkmate indication

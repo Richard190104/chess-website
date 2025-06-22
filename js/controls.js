@@ -32,10 +32,15 @@ export function setupInteraction(
   selectionCircle.rotation.x = -Math.PI / 2;
   selectionCircle.visible = false;
 
+  // Square highlight mesh
+  let squareHighlight = null;
+
+  // Store multiple right-click highlights
+  const rightClickHighlights = new Map(); // key: "file,rank", value: mesh
+
   scene.add(highlights, selectionCircle);
 
   function clearSelection() {
-    // this doesnt do shit
     if (selectedMesh) {
       controls.enabled = true;
       selectionCircle.visible = false;
@@ -47,6 +52,8 @@ export function setupInteraction(
       legalMoves = [];
     }
   }
+
+
 
   function showHighlights(moves) {
     highlights.clear();
@@ -77,6 +84,9 @@ export function setupInteraction(
     return {
       square: String.fromCharCode(97 + file) + (rank + 1),
       point: hits[0].point,
+      file,
+      rank,
+      mesh: hits[0].object,
     };
   }
 
@@ -101,15 +111,75 @@ export function setupInteraction(
     }
   };
 
+  function removeSquareHighlight() {
+    if (squareHighlight) {
+      scene.remove(squareHighlight);
+      squareHighlight.geometry.dispose();
+      squareHighlight.material.dispose();
+      squareHighlight = null;
+    }
+  }
+
+
+
+  function removeAllRightClickHighlights() {
+    for (const mesh of rightClickHighlights.values()) {
+      scene.remove(mesh);
+      mesh.geometry.dispose();
+      mesh.material.dispose();
+    }
+    rightClickHighlights.clear();
+  }
+
+  function toggleRightClickHighlight(file, rank) {
+    const key = `${file},${rank}`;
+    if (rightClickHighlights.has(key)) {
+      // Remove highlight
+      const mesh = rightClickHighlights.get(key);
+      scene.remove(mesh);
+      mesh.geometry.dispose();
+      mesh.material.dispose();
+      rightClickHighlights.delete(key);
+    } else {
+      // Add highlight
+      const mesh = boardGroup.children.find(
+        (sq) => sq.userData.file === file && sq.userData.rank === rank
+      );
+      if (!mesh) return;
+      const geom = new THREE.PlaneGeometry(1, 1);
+      const mat = new THREE.MeshBasicMaterial({
+        color: 0xff0000, // red
+        transparent: true,
+        opacity: 0.7,
+        depthWrite: false,
+      });
+      const highlightMesh = new THREE.Mesh(geom, mat);
+      highlightMesh.rotation.x = -Math.PI / 2;
+      // Set y to be exactly the same as the square (level with the square)
+      highlightMesh.position.set(mesh.position.x, mesh.position.y, mesh.position.z);
+      scene.add(highlightMesh);
+      rightClickHighlights.set(key, highlightMesh);
+    }
+  }
+
   domEl.addEventListener("contextmenu", (e) => e.preventDefault());
 
   domEl.addEventListener("pointerdown", (e) => {
-    // right-click or click off-board cancels
-    // doesnt work for right-click
+    // right-click toggles highlight on square
     if (e.button === 2) {
-      // it should be something else here, than just this function
-      // this function also gets triggered when you release the piece
-      clearSelection();
+      // Remove left-click highlights when right-clicking
+      highlights.clear();
+      selectionCircle.visible = false;
+      removeSquareHighlight();
+      selectedMesh = null;
+      selectedFrom = null;
+      selectetCPiece = null;
+      legalMoves = [];
+
+      const info = getBoardInfo(e);
+      if (info) {
+        toggleRightClickHighlight(info.file, info.rank);
+      }
       return;
     }
     const info = getBoardInfo(e);
@@ -170,7 +240,6 @@ export function setupInteraction(
   });
 
   domEl.addEventListener("pointerup", (e) => {
-    // on this move the yellow ring is still visible
     if (!selectedMesh) return;
     const info = getBoardInfo(e);
     if (info && legalMoves.find((m) => m.to === info.square)) {
@@ -186,12 +255,19 @@ export function setupInteraction(
   });
 
   domEl.addEventListener("click", (e) => {
+      removeAllRightClickHighlights(); 
+
     const info = getBoardInfo(e);
     if (!info) {
       selectetCPiece = null;
       highlights.clear();
+      removeSquareHighlight();
+      // Do not remove right-click highlights here
       return;
+      
     }
+
+    // Do not remove right-click highlights on left click
 
     if (selectetCPiece && selectedFrom && legalMoves.length) {
       const move = legalMoves.find((m) => m.to === info.square);
@@ -204,6 +280,7 @@ export function setupInteraction(
         highlights.clear();
         selectionCircle.visible = false;
         controls.enabled = true;
+        removeSquareHighlight();
 
         if (chess.turn() === "b") {
           askStockfishToMove();
