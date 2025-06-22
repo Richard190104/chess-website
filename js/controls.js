@@ -1,5 +1,8 @@
 import * as THREE from "three";
 var selectetCPiece = null;
+  const engine = new Worker("./js/stockfish-nnue-16-single.js");
+  engine.postMessage("uci");
+  engine.postMessage("ucinewgame");
 export function setupInteraction(
   domEl,
   camera,
@@ -37,6 +40,7 @@ export function setupInteraction(
       selectedMesh.position.copy(originalPosition);
       selectedMesh = null;
       selectedFrom = null;
+      selectetCPiece = null;
       legalMoves = [];
     }
   }
@@ -72,6 +76,28 @@ export function setupInteraction(
       point: hits[0].point,
     };
   }
+
+  function askStockfishToMove() {
+    const fen = chess.fen();
+    engine.postMessage("position fen " + fen);
+    engine.postMessage("go depth 3");
+  }
+
+  engine.onmessage = function (event) {
+    const line = event.data;
+    if (line.startsWith("bestmove")) {
+      const move = line.split(" ")[1];
+      if (move && move !== "(none)") {
+        chess.move({
+          from: move.slice(0, 2),
+          to: move.slice(2, 4),
+          promotion: "q"
+        });
+        renderPieces(chess, piecesGroup);
+      }
+    }
+  };
+
 
   domEl.addEventListener("contextmenu", (e) => e.preventDefault());
 
@@ -144,6 +170,10 @@ export function setupInteraction(
     if (info && legalMoves.find((m) => m.to === info.square)) {
       chess.move({ from: selectedFrom, to: info.square });
       renderPieces(chess, piecesGroup);
+      console.log(chess.board())
+      if (chess.turn() === "b") {
+      askStockfishToMove();
+    }
     }
     domEl.releasePointerCapture(e.pointerId);
     clearSelection();
@@ -168,6 +198,10 @@ export function setupInteraction(
         highlights.clear();
         selectionCircle.visible = false;
         controls.enabled = true;
+
+        if (chess.turn() === "b") {
+          askStockfishToMove();
+        }
         return;
       }
     }

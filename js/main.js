@@ -8,6 +8,8 @@ import { setupInteraction } from "./controls.js";
 import { createGame } from "./game.js";
 
 async function init() {
+
+  
   const container = document.getElementById("canvas-container");
   const { scene, camera, renderer } = createScene(container);
 

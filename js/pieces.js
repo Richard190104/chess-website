@@ -18,6 +18,18 @@ const modelMap = {
 };
 const cache = {};
 
+function setModelColor(model, color) {
+  model.traverse((child) => {
+    if (child.isMesh) {
+      child.material = new THREE.MeshStandardMaterial({
+        color: color,
+        metalness: 0.01,
+        roughness: 0.9,
+      });
+    }
+  });
+}
+
 export async function preloadModels() {
   const squareSize = 1; // your board squares are 1×1
   const scl = 0.8; // scale to 80% of square width
@@ -39,6 +51,13 @@ export async function preloadModels() {
 
       model.position.y = -minY;
 
+      // Set color: black pieces get black, white pieces get white
+      if (code === code.toUpperCase()) {
+        setModelColor(model, 0xffffff); // white
+      } else {
+        setModelColor(model, 0x222222); // black
+      }
+
       cache[code] = model;
     }),
   );
@@ -49,10 +68,9 @@ export async function preloadModels() {
 export function renderPieces(chess, piecesGroup) {
   piecesGroup.clear();
   const layout = chess.board();
-
   for (let rank = 0; rank < 8; rank++) {
     for (let file = 0; file < 8; file++) {
-      const piece = layout[7 - rank][file];
+      const piece = layout[7-rank][file];
       if (!piece) continue;
 
       const code = piece.color === "w" ? piece.type.toUpperCase() : piece.type;
