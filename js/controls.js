@@ -46,17 +46,17 @@ export function setupInteraction(
     moves.forEach((m) => {
       const f = m.to.charCodeAt(0) - 97;
       const r = parseInt(m.to[1], 10) - 1;
-      const geom = new THREE.PlaneGeometry(1, 1);
+      const geom = new THREE.CircleGeometry(0.15, 32);
       const mat = new THREE.MeshBasicMaterial({
         color: 0x00ff00,
         transparent: true,
-        opacity: 0.4,
+        opacity: 0.7,
         depthWrite: false,
       });
-      const sq = new THREE.Mesh(geom, mat);
-      sq.rotation.x = -Math.PI / 2;
-      sq.position.set(f + 0.5, 0.02, r + 0.5);
-      highlights.add(sq);
+      const dot = new THREE.Mesh(geom, mat);
+      dot.rotation.x = -Math.PI / 2;
+      dot.position.set(f + 0.5, 0.03, r + 0.5);
+      highlights.add(dot);
     });
   }
 
@@ -157,7 +157,6 @@ export function setupInteraction(
       return;
     }
 
-    // If a piece is already selected and the clicked square is a legal move, move it
     if (selectetCPiece && selectedFrom && legalMoves.length) {
       const move = legalMoves.find((m) => m.to === info.square);
       if (move) {
@@ -173,7 +172,6 @@ export function setupInteraction(
       }
     }
 
-    // Find the piece at the clicked square
     const candidate = piecesGroup.children.find(
       (m) =>
         Math.abs(m.position.x - info.point.x) < 0.5 &&
@@ -181,14 +179,12 @@ export function setupInteraction(
     );
     selectetCPiece = candidate || null;
 
-    // Show possible moves for the selected piece
     if (selectetCPiece) {
       const moves = chess.moves({ square: info.square, verbose: true });
       legalMoves = moves;
       selectedFrom = info.square;
       showHighlights(moves);
 
-      // Show ring under the piece
       selectionCircle.position.set(
         selectetCPiece.position.x,
         0.01,
