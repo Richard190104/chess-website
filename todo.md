@@ -1,5 +1,6 @@
 
 # TODO:
+- [ ] change background to be less dark, black pieces are hard to see sometimes
 - [ ] add a way to resign/restart
 - [ ] add checkmate indication
 - [ ] add move history
