@@ -1,5 +1,5 @@
 import * as THREE from "three";
-
+var selectetCPiece = null;
 export function setupInteraction(
   domEl,
   camera,
@@ -134,7 +134,6 @@ export function setupInteraction(
     if (!selectedMesh) return;
     const info = getBoardInfo(e);
     if (!info) return;
-    // drag the piece under the cursor
     selectedMesh.position.x = info.point.x;
     selectedMesh.position.z = info.point.z;
   });
@@ -148,5 +147,61 @@ export function setupInteraction(
     }
     domEl.releasePointerCapture(e.pointerId);
     clearSelection();
+  });
+
+  domEl.addEventListener("click", (e) => {
+    const info = getBoardInfo(e);
+    if (!info) {
+      selectetCPiece = null;
+      highlights.clear();
+      return;
+    }
+
+    // If a piece is already selected and the clicked square is a legal move, move it
+    if (selectetCPiece && selectedFrom && legalMoves.length) {
+      const move = legalMoves.find((m) => m.to === info.square);
+      if (move) {
+        chess.move({ from: selectedFrom, to: info.square });
+        renderPieces(chess, piecesGroup);
+        selectetCPiece = null;
+        selectedFrom = null;
+        legalMoves = [];
+        highlights.clear();
+        selectionCircle.visible = false;
+        controls.enabled = true;
+        return;
+      }
+    }
+
+    // Find the piece at the clicked square
+    const candidate = piecesGroup.children.find(
+      (m) =>
+        Math.abs(m.position.x - info.point.x) < 0.5 &&
+        Math.abs(m.position.z - info.point.z) < 0.5,
+    );
+    selectetCPiece = candidate || null;
+
+    // Show possible moves for the selected piece
+    if (selectetCPiece) {
+      const moves = chess.moves({ square: info.square, verbose: true });
+      legalMoves = moves;
+      selectedFrom = info.square;
+      showHighlights(moves);
+
+      // Show ring under the piece
+      selectionCircle.position.set(
+        selectetCPiece.position.x,
+        0.01,
+        selectetCPiece.position.z,
+      );
+      selectionCircle.visible = true;
+      controls.enabled = false;
+    } else {
+      highlights.clear();
+      selectionCircle.visible = false;
+      controls.enabled = true;
+      selectedFrom = null;
+      legalMoves = [];
+    }
   });
 }
