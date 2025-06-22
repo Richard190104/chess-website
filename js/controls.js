@@ -37,7 +37,6 @@ export function setupInteraction(
   function clearSelection() {
     // this doesnt do shit
     if (selectedMesh) {
-      console.log("Clearing selection");
       controls.enabled = true;
       selectionCircle.visible = false;
       highlights.clear();
@@ -63,7 +62,7 @@ export function setupInteraction(
       });
       const dot = new THREE.Mesh(geom, mat);
       dot.rotation.x = -Math.PI / 2;
-      dot.position.set(7 - f, 0.03, r);
+      dot.position.set(7 - f, 0.05, r);
       highlights.add(dot);
     });
   }
@@ -107,8 +106,9 @@ export function setupInteraction(
   domEl.addEventListener("pointerdown", (e) => {
     // right-click or click off-board cancels
     // doesnt work for right-click
-    console.log(e.button);
     if (e.button === 2) {
+      // it should be something else here, than just this function
+      // this function also gets triggered when you release the piece
       clearSelection();
       return;
     }
@@ -151,7 +151,7 @@ export function setupInteraction(
       // show ring under the piece
       selectionCircle.position.set(
         originalPosition.x,
-        0.01,
+        0.05,
         originalPosition.z,
       );
       selectionCircle.visible = true;
@@ -170,6 +170,7 @@ export function setupInteraction(
   });
 
   domEl.addEventListener("pointerup", (e) => {
+    // on this move the yellow ring is still visible
     if (!selectedMesh) return;
     const info = getBoardInfo(e);
     if (info && legalMoves.find((m) => m.to === info.square)) {
@@ -226,7 +227,7 @@ export function setupInteraction(
 
       selectionCircle.position.set(
         selectetCPiece.position.x,
-        0.01,
+        0.05,
         selectetCPiece.position.z,
       );
       selectionCircle.visible = true;
