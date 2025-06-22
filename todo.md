@@ -1,0 +1,9 @@
+
+# TODO:
+- [ ] Three fulled repetition feels like 5-fulled repetition // stockfish repeated 4 times, look into it
+- [ ] add checkmate indication
+- [ ] add a way to resign/restart
+- [ ] add move history
+- [ ] misplaced queens and kings // castles work just on different sides, looks like we are placing them mirrored
+- [ ] camera should rotate around the board, not all the way around
+- [ ] camera should be facing the white pieces from behind, not from the front
