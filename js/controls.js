@@ -1,8 +1,10 @@
 import * as THREE from "three";
+
 var selectetCPiece = null;
-  const engine = new Worker("./js/stockfish-nnue-16-single.js");
-  engine.postMessage("uci");
-  engine.postMessage("ucinewgame");
+const engine = new Worker("./js/stockfish-nnue-16-single.js");
+engine.postMessage("uci");
+engine.postMessage("ucinewgame");
+
 export function setupInteraction(
   domEl,
   camera,
@@ -91,18 +93,18 @@ export function setupInteraction(
         chess.move({
           from: move.slice(0, 2),
           to: move.slice(2, 4),
-          promotion: "q"
+          promotion: "q",
         });
         renderPieces(chess, piecesGroup);
       }
     }
   };
 
-
   domEl.addEventListener("contextmenu", (e) => e.preventDefault());
 
   domEl.addEventListener("pointerdown", (e) => {
     // right-click or click off-board cancels
+    // doesnt work for right-click
     if (e.button === 2) {
       clearSelection();
       return;
@@ -170,10 +172,10 @@ export function setupInteraction(
     if (info && legalMoves.find((m) => m.to === info.square)) {
       chess.move({ from: selectedFrom, to: info.square });
       renderPieces(chess, piecesGroup);
-      console.log(chess.board())
+      console.log(chess.board());
       if (chess.turn() === "b") {
-      askStockfishToMove();
-    }
+        askStockfishToMove();
+      }
     }
     domEl.releasePointerCapture(e.pointerId);
     clearSelection();
