@@ -18,7 +18,7 @@ export function createBoard() {
     roughness: 0.6,
   });
   const border = new THREE.Mesh(borderGeom, borderMat);
-  border.position.set(4, -borderThickness / 2, 4);
+  border.position.set(3.5, -borderThickness / 2, 3.5);
   group.add(border);
 
   // Add chessboard squares
@@ -33,7 +33,7 @@ export function createBoard() {
       const square = new THREE.Mesh(geom, mat);
 
       square.rotation.x = -Math.PI / 2;
-      square.position.set(x + 0.5, 0.01, z + 0.5); // Slightly above the border
+      square.position.set(x, 0.01, z);
 
       square.userData = { file: x, rank: z };
 

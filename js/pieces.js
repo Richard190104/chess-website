@@ -79,8 +79,8 @@ export function renderPieces(chess, piecesGroup) {
       if (!template) continue;
 
       const mesh = template.clone();
-      mesh.position.x = file + 0.5;
-      mesh.position.z = rank + 0.5;
+      mesh.position.x = file;
+      mesh.position.z = rank;
 
       piecesGroup.add(mesh);
     }
