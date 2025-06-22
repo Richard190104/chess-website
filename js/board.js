@@ -7,8 +7,16 @@ export function createBoard() {
   // Add a beveled border around the board
   const borderThickness = 0.15;
   const boardSize = 8 * size;
-  const borderGeom = new THREE.BoxGeometry(boardSize + borderThickness * 2, borderThickness, boardSize + borderThickness * 2);
-  const borderMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, metalness: 0.3, roughness: 0.6 });
+  const borderGeom = new THREE.BoxGeometry(
+    boardSize + borderThickness * 2,
+    borderThickness,
+    boardSize + borderThickness * 2,
+  );
+  const borderMat = new THREE.MeshStandardMaterial({
+    color: 0x8b5a2b,
+    metalness: 0.3,
+    roughness: 0.6,
+  });
   const border = new THREE.Mesh(borderGeom, borderMat);
   border.position.set(4, -borderThickness / 2, 4);
   group.add(border);
@@ -35,7 +43,11 @@ export function createBoard() {
 
   // Optional: Add a subtle ambient shadow under the board
   const shadowGeom = new THREE.CircleGeometry(4.5, 32);
-  const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, opacity: 0.15, transparent: true });
+  const shadowMat = new THREE.MeshBasicMaterial({
+    color: 0x000000,
+    opacity: 0.15,
+    transparent: true,
+  });
   const shadow = new THREE.Mesh(shadowGeom, shadowMat);
   shadow.rotation.x = -Math.PI / 2;
   shadow.position.set(4, -0.14, 4);
