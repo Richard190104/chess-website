@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-let stockfishDiff = 1;
+let stockfishDiff = 3;
 // Player side switch
 let playerPieces = "w"; // default to white
 const controlsDiv = document.getElementById("game-controls");
