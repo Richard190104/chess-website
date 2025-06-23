@@ -120,47 +120,128 @@ export function setupInteraction(
     const fen = chess.fen();
     engine.postMessage("position fen " + fen);
     // Ask for 6 best moves, so we can pick the 4th
-    engine.postMessage("setoption name MultiPV value 10");
+    engine.postMessage("setoption name MultiPV value 7");
     engine.postMessage("go depth 1");
   }
 
   // Store multipv lines
   let multipvMoves = [];
+  let multipvScores = [];
 
   // 
-  let stockfishDiff = 4; // first x moves, ${stockfishDiff}th best move
+  let stockfishDiff = 2; // first x moves, ${stockfishDiff}th best move
 
   engine.onmessage = function (event) {
     const line = event.data;
+    // Parse multipv lines and scores
     if (line.startsWith("info") && line.includes("multipv")) {
       const multipvMatch = line.match(/multipv (\d+)/);
       const pvMatch = line.match(/ pv ([a-h][1-8][a-h][1-8][qrbn]?)/);
+      const scoreMatch = line.match(/score (cp|mate) (-?\d+)/);
       if (multipvMatch && pvMatch) {
         const multipvNum = parseInt(multipvMatch[1], 10);
         const move = pvMatch[1];
         multipvMoves[multipvNum - 1] = move;
+        if (scoreMatch) {
+          // cp = centipawns, mate = mate in N
+          let score = scoreMatch[1] === "cp" ? parseInt(scoreMatch[2], 10) : (scoreMatch[1] === "mate" ? 10000 * Math.sign(parseInt(scoreMatch[2], 10)) : 0);
+          multipvScores[multipvNum - 1] = score;
+        }
       }
     }
     if (line.startsWith("bestmove")) {
       let move = null;
-      const moveNumber = chess.history().length;
-      let pickIndexes = [];
+      // Find best score for reference
+      const bestScore = Math.max(...multipvScores.filter(s => typeof s === "number"));
 
-   
-        pickIndexes = [stockfishDiff];
+      // Filter out moves that hang pieces (simple static exchange evaluation)
+      // We'll use chess.js to check if the move loses material immediately
+      function isHangingMove(moveStr) {
+        const from = moveStr.slice(0, 2);
+        const to = moveStr.slice(2, 4);
+        const tempChess = new Chess(chess.fen());
+
+        const move = tempChess.move({ from, to, promotion: "q" });
+        if (!move) return true; // illegal
+
+        const pieceValue = {
+          p: 1,
+          n: 3,
+          b: 3,
+          r: 5,
+          q: 9,
+          k: 1000
+        };
+
+        const movedValue = pieceValue[move.piece];
+        const capturedValue = move.captured ? pieceValue[move.captured] : 0;
+
+        const attackers = tempChess.moves({ verbose: true }).filter(m => m.to === to && m.color !== tempChess.turn());
+        const defenders = tempChess.moves({ verbose: true }).filter(m => m.to === to && m.color === tempChess.turn());
+
+        // If we captured a more valuable piece than we risk, it's ok
+        if (capturedValue >= movedValue) return false;
+
+        // If square is attacked and not defended, and we're not gaining material, it's likely a blunder
+        if (attackers.length > 0 && defenders.length === 0 && movedValue >= 3 && capturedValue < movedValue) {
+          return true;
+        }
+
+        return false;
+      }
+
+
+
+      // Only allow moves within 300cp of best and not hanging
+// Rebuild safeIndexes as array of objects with score, idx
+        let chosenIdx = null
+      
+        let safeIndexesScored = multipvScores
+        .map((score, idx) => ({ score, idx }))
+        .filter(obj =>
+          typeof obj.score === "number" &&
+          bestScore - obj.score <= (stockfishDiff+1) *50 &&
+          multipvMoves[obj.idx] &&
+          !isHangingMove(multipvMoves[obj.idx])
+        )
+        .sort((a, b) => b.score - a.score); // sort best to worst
+
+      // Extract sorted indexes
+      let safeIndexes = safeIndexesScored.map(obj => obj.idx);
+
+      // Choose by stockfishDiff (fallback to best)
+       chosenIdx = safeIndexes[stockfishDiff] !== undefined
+        ? safeIndexes[stockfishDiff]
+        : safeIndexes[0];
+      
      
-      for (let idx of pickIndexes) {
-        if (multipvMoves.length > idx && multipvMoves[idx]) {
-          move = multipvMoves[idx];
-          break;
+
+        
+
+
+
+
+      if (multipvMoves.length > chosenIdx && multipvMoves[chosenIdx]) {
+        move = multipvMoves[chosenIdx];
+      }
+
+      if (!move) {
+        // fallback: pick the best non-hanging move
+        for (let idx = 0; idx < multipvMoves.length; idx++) {
+          if (multipvMoves[idx] && !isHangingMove(multipvMoves[idx])) {
+            move = multipvMoves[idx];
+            break;
+          }
         }
       }
 
       if (!move) {
+        // fallback: just use bestmove from Stockfish
         move = line.split(" ")[1];
       }
 
-      multipvMoves = []; 
+      multipvMoves = [];
+      multipvScores = [];
       if (move && move !== "(none)") {
         chess.move({
           from: move.slice(0, 2),
