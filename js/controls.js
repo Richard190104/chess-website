@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-var selectetCPiece = null;
+var selectedCPiece = null;
 const engine = new Worker("./js/stockfish-nnue-16-single.js");
 engine.postMessage("uci");
 engine.postMessage("ucinewgame");
@@ -23,6 +23,8 @@ export function setupInteraction(
   let originalPosition = new THREE.Vector3();
   let legalMoves = [];
 
+  let dragged = false;
+
   // highlight groups
   const highlights = new THREE.Group();
   const selectionCircle = new THREE.Mesh(
@@ -42,18 +44,16 @@ export function setupInteraction(
 
   function clearSelection() {
     if (selectedMesh) {
-      controls.enabled = true;
-      selectionCircle.visible = false;
-      highlights.clear();
       selectedMesh.position.copy(originalPosition);
       selectedMesh = null;
-      selectedFrom = null;
-      selectetCPiece = null;
-      legalMoves = [];
     }
+    controls.enabled = true;
+    selectionCircle.visible = false;
+    highlights.clear();
+    selectedFrom = null;
+    selectedCPiece = null;
+    legalMoves = [];
   }
-
-
 
   function showHighlights(moves) {
     highlights.clear();
@@ -90,6 +90,18 @@ export function setupInteraction(
     };
   }
 
+  function resetGame() {
+    chess.reset();
+
+    clearSelection();
+    removeAllRightClickHighlights();
+    removeSquareHighlight();
+
+    renderPieces(chess, piecesGroup);
+
+    engine.postMessage("ucinewgame");
+  }
+
   function askStockfishToMove() {
     const fen = chess.fen();
     engine.postMessage("position fen " + fen);
@@ -120,8 +132,6 @@ export function setupInteraction(
     }
   }
 
-
-
   function removeAllRightClickHighlights() {
     for (const mesh of rightClickHighlights.values()) {
       scene.remove(mesh);
@@ -143,7 +153,7 @@ export function setupInteraction(
     } else {
       // Add highlight
       const mesh = boardGroup.children.find(
-        (sq) => sq.userData.file === file && sq.userData.rank === rank
+        (sq) => sq.userData.file === file && sq.userData.rank === rank,
       );
       if (!mesh) return;
       const geom = new THREE.PlaneGeometry(1, 1);
@@ -156,7 +166,11 @@ export function setupInteraction(
       const highlightMesh = new THREE.Mesh(geom, mat);
       highlightMesh.rotation.x = -Math.PI / 2;
       // Set y to be exactly the same as the square (level with the square)
-      highlightMesh.position.set(mesh.position.x, mesh.position.y, mesh.position.z);
+      highlightMesh.position.set(
+        mesh.position.x,
+        mesh.position.y,
+        mesh.position.z,
+      );
       scene.add(highlightMesh);
       rightClickHighlights.set(key, highlightMesh);
     }
@@ -167,19 +181,21 @@ export function setupInteraction(
   domEl.addEventListener("pointerdown", (e) => {
     // right-click toggles highlight on square
     if (e.button === 2) {
+      const info = getBoardInfo(e);
+
+      if (info && !selectionCircle.visible) {
+        toggleRightClickHighlight(info.file, info.rank);
+      }
+
       // Remove left-click highlights when right-clicking
       highlights.clear();
       selectionCircle.visible = false;
       removeSquareHighlight();
       selectedMesh = null;
       selectedFrom = null;
-      selectetCPiece = null;
+      selectedCPiece = null;
       legalMoves = [];
 
-      const info = getBoardInfo(e);
-      if (info) {
-        toggleRightClickHighlight(info.file, info.rank);
-      }
       return;
     }
     const info = getBoardInfo(e);
@@ -237,10 +253,13 @@ export function setupInteraction(
     if (!info) return;
     selectedMesh.position.x = info.point.x;
     selectedMesh.position.z = info.point.z;
+    selectedMesh.position.y = 0.5; // Tweak this
+    console.log("Pointer moved");
   });
 
   domEl.addEventListener("pointerup", (e) => {
     if (!selectedMesh) return;
+    dragged = true;
     const info = getBoardInfo(e);
     if (info && legalMoves.find((m) => m.to === info.square)) {
       chess.move({ from: selectedFrom, to: info.square });
@@ -252,29 +271,29 @@ export function setupInteraction(
     }
     domEl.releasePointerCapture(e.pointerId);
     clearSelection();
+    console.log("Pointer released");
   });
 
   domEl.addEventListener("click", (e) => {
-      removeAllRightClickHighlights(); 
+    removeAllRightClickHighlights();
 
     const info = getBoardInfo(e);
     if (!info) {
-      selectetCPiece = null;
+      selectedCPiece = null;
       highlights.clear();
       removeSquareHighlight();
       // Do not remove right-click highlights here
       return;
-      
     }
 
     // Do not remove right-click highlights on left click
 
-    if (selectetCPiece && selectedFrom && legalMoves.length) {
+    if (selectedCPiece && selectedFrom && legalMoves.length) {
       const move = legalMoves.find((m) => m.to === info.square);
       if (move) {
         chess.move({ from: selectedFrom, to: info.square });
         renderPieces(chess, piecesGroup);
-        selectetCPiece = null;
+        selectedCPiece = null;
         selectedFrom = null;
         legalMoves = [];
         highlights.clear();
@@ -294,20 +313,20 @@ export function setupInteraction(
         Math.abs(m.position.x - info.point.x) < 0.5 &&
         Math.abs(m.position.z - info.point.z) < 0.5,
     );
-    selectetCPiece = candidate || null;
+    selectedCPiece = candidate || null;
 
-    if (selectetCPiece) {
+    if (selectedCPiece) {
       const moves = chess.moves({ square: info.square, verbose: true });
       legalMoves = moves;
       selectedFrom = info.square;
       showHighlights(moves);
 
       selectionCircle.position.set(
-        selectetCPiece.position.x,
+        selectedCPiece.position.x,
         0.05,
-        selectetCPiece.position.z,
+        selectedCPiece.position.z,
       );
-      selectionCircle.visible = true;
+      selectionCircle.visible = legalMoves.length > 0; // this is a hack, not a solution
       controls.enabled = false;
     } else {
       highlights.clear();
@@ -316,5 +335,11 @@ export function setupInteraction(
       selectedFrom = null;
       legalMoves = [];
     }
+
+    console.log("Clicked on square:");
+  });
+
+  document.getElementById("restart-btn").addEventListener("click", () => {
+    resetGame();
   });
 }

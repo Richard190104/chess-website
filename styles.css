@@ -53,3 +53,27 @@ canvas {
   background: rgba(255, 255, 255, 0.01);
   transition: box-shadow 0.3s;
 }
+
+#game-controls {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  display: flex;
+  gap: 10px;
+}
+
+#game-controls button {
+  padding: 10px 15px;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+#game-controls button:hover {
+  background-color: #555;
+}
