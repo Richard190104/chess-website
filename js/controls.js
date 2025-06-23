@@ -55,21 +55,21 @@ if (controlsDiv) {
   const diffSlider = document.createElement("input");
   diffSlider.type = "range";
   diffSlider.id = "difficulty-slider";
-  diffSlider.min = "0";
-  diffSlider.max = "6";
-  diffSlider.value = stockfishDiff;
+  diffSlider.min = "1";
+  diffSlider.max = "7";
+  diffSlider.value = 7-stockfishDiff;
   diffSlider.style.width = "120px";
   diffSlider.style.marginRight = "8px";
 
   const diffValue = document.createElement("span");
-  diffValue.textContent = (stockfishDiff + 1).toString();
+  diffValue.textContent = 8 - (stockfishDiff + 1).toString();
   diffValue.style.fontWeight = "bold";
   diffValue.style.minWidth = "1.5em";
   diffValue.style.textAlign = "center";
 
   diffSlider.addEventListener("input", (e) => {
-    stockfishDiff = parseInt(e.target.value, 10);
-    diffValue.textContent = (stockfishDiff + 1).toString();
+    stockfishDiff = 7-parseInt(e.target.value, 10);
+    diffValue.textContent = 8-(stockfishDiff + 1).toString();
   });
 
   diffSlider.addEventListener("change", () => {
