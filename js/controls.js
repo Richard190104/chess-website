@@ -120,7 +120,7 @@ export function setupInteraction(
     const fen = chess.fen();
     engine.postMessage("position fen " + fen);
     // Ask for 6 best moves, so we can pick the 4th
-    engine.postMessage("setoption name MultiPV value 6");
+    engine.postMessage("setoption name MultiPV value 10");
     engine.postMessage("go depth 1");
   }
 
@@ -128,8 +128,7 @@ export function setupInteraction(
   let multipvMoves = [];
 
   // 
-  let stockfishDiff = 2; // first 10 moves, ${stockfishDiff}th best move, then ${stockfishDiff + 1} to ${stockfishDiff + 3} best moves
-  let hardMode = false; // true disables the multipv logic and always picks the stockfishDiff-th best move
+  let stockfishDiff = 4; // first x moves, ${stockfishDiff}th best move
 
   engine.onmessage = function (event) {
     const line = event.data;
@@ -147,14 +146,9 @@ export function setupInteraction(
       const moveNumber = chess.history().length;
       let pickIndexes = [];
 
-      if (typeof hardMode !== "undefined" && hardMode) {
+   
         pickIndexes = [stockfishDiff];
-      } else if (moveNumber < 10) {
-        pickIndexes = [stockfishDiff];
-      } else {
-        pickIndexes = [stockfishDiff + 1, stockfishDiff + 2, stockfishDiff + 3];
-      }
-
+     
       for (let idx of pickIndexes) {
         if (multipvMoves.length > idx && multipvMoves[idx]) {
           move = multipvMoves[idx];
