@@ -1,7 +1,7 @@
 
 # TODO:
 - [ ] add checkmate indication // logic done, visuals missing
-- [ ] add move history
+- [x] add move history
 - [ ] mobile screen
 - [ ] sounds
 - [ ] 2D

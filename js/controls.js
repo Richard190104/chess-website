@@ -6,6 +6,37 @@ const engine = new Worker("./js/stockfish-nnue-16-single.js");
 engine.postMessage("uci");
 engine.postMessage("ucinewgame");
 
+const moveHistoryContainer = document.querySelector(".move-history-container");
+if (moveHistoryContainer) {
+  moveHistoryContainer.innerHTML = `
+    <h3>Move History</h3>
+    <ul class="move-history-list"></ul>
+  `;
+}
+const moveHistoryList = moveHistoryContainer
+  ? moveHistoryContainer.querySelector(".move-history-list")
+  : null;
+
+function updateMoveHistory(chess) {
+  if (!moveHistoryList) return;
+  const history = chess.history({ verbose: true });
+  moveHistoryList.innerHTML = "";
+  for (let i = 0; i < history.length; i += 2) {
+    const whiteMove = history[i]
+      ? `${history[i].from}-${history[i].to}${history[i].promotion ? "=" + history[i].promotion.toUpperCase() : ""}`
+      : "";
+    const blackMove = history[i + 1]
+      ? `${history[i + 1].from}-${history[i + 1].to}${history[i + 1].promotion ? "=" + history[i + 1].promotion.toUpperCase() : ""}`
+      : "";
+    const li = document.createElement("li");
+    li.textContent = `${Math.floor(i / 2) + 1}. ${whiteMove}${blackMove ? "   " + blackMove : ""}`;
+    moveHistoryList.appendChild(li);
+  }
+  if (moveHistoryList.lastChild) {
+    moveHistoryList.lastChild.classList.add("last-move");
+  }
+}
+
 export function setupInteraction(
   domEl,
   camera,
@@ -113,6 +144,7 @@ export function setupInteraction(
     if (chess.turn() !== player) {
       askStockfishToMove();
     }
+    updateMoveHistory(chess);
     checkGameStatus();
   }
 
@@ -129,7 +161,7 @@ export function setupInteraction(
   let multipvScores = [];
 
   // 
-  let stockfishDiff = 2; // first x moves, ${stockfishDiff}th best move
+  let stockfishDiff = 1; // first x moves, ${stockfishDiff}th best move
 
   engine.onmessage = function (event) {
     const line = event.data;
@@ -190,13 +222,11 @@ export function setupInteraction(
         return false;
       }
 
-
-
       // Only allow moves within 300cp of best and not hanging
-// Rebuild safeIndexes as array of objects with score, idx
-        let chosenIdx = null
-      
-        let safeIndexesScored = multipvScores
+      // Rebuild safeIndexes as array of objects with score, idx
+      let chosenIdx = null
+
+      let safeIndexesScored = multipvScores
         .map((score, idx) => ({ score, idx }))
         .filter(obj =>
           typeof obj.score === "number" &&
@@ -210,16 +240,9 @@ export function setupInteraction(
       let safeIndexes = safeIndexesScored.map(obj => obj.idx);
 
       // Choose by stockfishDiff (fallback to best)
-       chosenIdx = safeIndexes[stockfishDiff] !== undefined
+      chosenIdx = safeIndexes[stockfishDiff] !== undefined
         ? safeIndexes[stockfishDiff]
         : safeIndexes[0];
-      
-     
-
-        
-
-
-
 
       if (multipvMoves.length > chosenIdx && multipvMoves[chosenIdx]) {
         move = multipvMoves[chosenIdx];
@@ -249,6 +272,7 @@ export function setupInteraction(
           promotion: "q",
         });
         renderPieces(chess, piecesGroup);
+        updateMoveHistory(chess);
         checkGameStatus();
       }
     }
@@ -360,6 +384,7 @@ export function setupInteraction(
     if (selectedMesh && info && legalMoves.find((m) => m.to === info.square)) {
       chess.move({ from: selectedFrom, to: info.square });
       renderPieces(chess, piecesGroup);
+      updateMoveHistory(chess);
       checkGameStatus();
       clearSelection();
       return;
@@ -415,6 +440,7 @@ export function setupInteraction(
     if (info && legalMoves.find((m) => m.to === info.square)) {
       chess.move({ from: selectedFrom, to: info.square });
       renderPieces(chess, piecesGroup);
+      updateMoveHistory(chess);
       checkGameStatus();
 
       if (chess.turn() !== player) {
@@ -441,6 +467,7 @@ export function setupInteraction(
       if (move) {
         chess.move({ from: selectedFrom, to: info.square });
         renderPieces(chess, piecesGroup);
+        updateMoveHistory(chess);
         checkGameStatus();
 
         selectedCPiece = null;
@@ -490,4 +517,7 @@ export function setupInteraction(
   document.getElementById("restart-btn").addEventListener("click", () => {
     resetGame();
   });
+
+  // Initial move history
+  updateMoveHistory(chess);
 }

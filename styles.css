@@ -77,3 +77,48 @@ canvas {
 #game-controls button:hover {
   background-color: #555;
 }
+
+
+.move-history-container {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 220px;
+  max-height: 80vh;
+  background: rgba(30, 36, 48, 0.92);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.18);
+  padding: 18px 14px 14px 18px;
+  overflow-y: auto;
+  z-index: 1000;
+  color: #e0e6ef;
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.move-history-container h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  color: #b6c2d1;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.move-history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.move-history-list li {
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(44, 54, 70, 0.12);
+  font-size: 14px;
+  color: #e0e6ef;
+}
+
+.move-history-list li:last-child {
+  border-bottom: none;
+  color: #ffd700;
+  font-weight: 600;
+}
