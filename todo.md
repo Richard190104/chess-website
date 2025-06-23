@@ -6,8 +6,8 @@
 - [ ] sounds
 - [ ] 2D
 - [ ] ask what to promote to
-- [x] Three fulled repetition not working // stockfish repeats infinitely
 - [ ] Let the player choose the difficulty // How ??
+- [x] Three fulled repetition not working // stockfish repeats infinitely
 - [x] add a way to resign/restart
 - [x] add option to play as black
 - [x] remove yellow ring after drag and drop move
