@@ -60,6 +60,7 @@ canvas {
   left: 20px;
   z-index: 1000;
   display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
@@ -121,4 +122,55 @@ canvas {
   border-bottom: none;
   color: #ffd700;
   font-weight: 600;
+}
+
+
+#game-controls > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 100%;
+  margin-bottom: 8px;
+}
+
+#game-controls label {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #e0e6ef;
+  margin-right: 8px;
+}
+
+#side-switch {
+  padding: 7px 16px;
+  background: linear-gradient(90deg, #3a4454 0%, #232e3a 100%);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 1px 4px 0 rgba(44,54,70,0.10);
+}
+
+#side-switch:hover {
+  background: linear-gradient(90deg, #48536a 0%, #2a3644 100%);
+}
+
+#difficulty-slider {
+  accent-color: #ffd700;
+  width: 120px;
+  height: 4px;
+  border-radius: 2px;
+  background: #232e3a;
+  outline: none;
+  margin-right: 8px;
+}
+
+#game-controls span {
+  font-weight: bold;
+  min-width: 1.5em;
+  text-align: center;
+  color: #ffd700;
+  font-size: 1rem;
 }

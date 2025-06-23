@@ -1,5 +1,93 @@
 import * as THREE from "three";
 
+let stockfishDiff = 1;
+// Player side switch
+let playerPieces = "w"; // default to white
+const controlsDiv = document.getElementById("game-controls");
+
+// Add side switch to #game-controls
+if (controlsDiv) {
+  const sideSwitchContainer = document.createElement("div");
+  sideSwitchContainer.style.display = "flex";
+  sideSwitchContainer.style.alignItems = "center";
+  sideSwitchContainer.style.gap = "10px";
+  sideSwitchContainer.style.marginBottom = "8px";
+
+  const sideLabel = document.createElement("label");
+  sideLabel.textContent = "Your Side:";
+  sideLabel.style.fontWeight = "bold";
+  sideLabel.style.fontSize = "1rem";
+  sideLabel.setAttribute("for", "side-switch");
+
+  const sideSwitch = document.createElement("button");
+  sideSwitch.id = "side-switch";
+  sideSwitch.textContent = "White";
+
+
+  sideSwitch.addEventListener("click", () => {
+    playerPieces = playerPieces === "w" ? "b" : "w";
+    sideSwitch.textContent = playerPieces === "w" ? "White" : "Black";
+    // Restart game on side change
+    const restartBtn = document.getElementById("restart-btn");
+    if (restartBtn) {
+      restartBtn.click();
+    }
+  });
+
+  sideSwitchContainer.appendChild(sideLabel);
+  sideSwitchContainer.appendChild(sideSwitch);
+  controlsDiv.insertBefore(sideSwitchContainer, controlsDiv.firstChild);
+}
+// Add difficulty slider to #game-controls
+if (controlsDiv) {
+  const diffLabel = document.createElement("label");
+  diffLabel.textContent = "Difficulty:";
+  diffLabel.setAttribute("for", "difficulty-slider");
+  diffLabel.style.marginRight = "8px";
+  diffLabel.style.fontWeight = "bold";
+  diffLabel.style.fontSize = "1rem";
+
+  const sliderContainer = document.createElement("div");
+  sliderContainer.style.display = "flex";
+  sliderContainer.style.alignItems = "center";
+  sliderContainer.style.gap = "10px";
+
+  const diffSlider = document.createElement("input");
+  diffSlider.type = "range";
+  diffSlider.id = "difficulty-slider";
+  diffSlider.min = "0";
+  diffSlider.max = "6";
+  diffSlider.value = stockfishDiff;
+  diffSlider.style.width = "120px";
+  diffSlider.style.marginRight = "8px";
+
+  const diffValue = document.createElement("span");
+  diffValue.textContent = (stockfishDiff + 1).toString();
+  diffValue.style.fontWeight = "bold";
+  diffValue.style.minWidth = "1.5em";
+  diffValue.style.textAlign = "center";
+
+  diffSlider.addEventListener("input", (e) => {
+    stockfishDiff = parseInt(e.target.value, 10);
+    diffValue.textContent = (stockfishDiff + 1).toString();
+  });
+
+  diffSlider.addEventListener("change", () => {
+    // Restart game on difficulty change
+    const restartBtn = document.getElementById("restart-btn");
+    if (restartBtn) {
+      restartBtn.click();
+    }
+  });
+
+  sliderContainer.appendChild(diffLabel);
+  sliderContainer.appendChild(diffSlider);
+  sliderContainer.appendChild(diffValue);
+
+  controlsDiv.insertBefore(sliderContainer, controlsDiv.firstChild.nextSibling);
+}
+
+
 var selectedCPiece = null;
 let player = "w";
 const engine = new Worker("./js/stockfish-nnue-16-single.js");
@@ -130,7 +218,8 @@ export function setupInteraction(
 
     renderPieces(chess, piecesGroup);
 
-    player = player === "w" ? "b" : "w";
+    // Use playerPieces to set player color and camera
+    player = typeof playerPieces !== "undefined" ? playerPieces : "w";
 
     if (player === "w") {
       camera.position.set(3.5, 10, -5);
@@ -160,8 +249,7 @@ export function setupInteraction(
   let multipvMoves = [];
   let multipvScores = [];
 
-  // 
-  let stockfishDiff = 1; // first x moves, ${stockfishDiff}th best move
+  
 
   engine.onmessage = function (event) {
     const line = event.data;
