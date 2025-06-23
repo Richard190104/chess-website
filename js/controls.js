@@ -106,8 +106,6 @@ export function setupInteraction(
     } else {
       camera.position.set(3.5, 10, 12);
     }
-    // this must be here, otherwise we wont see the board until moving it.
-    // just what the fuck THREE.js ?
     camera.lookAt(new THREE.Vector3(3.5, 0, 3.5));
 
     engine.postMessage("ucinewgame");
@@ -121,15 +119,54 @@ export function setupInteraction(
   function askStockfishToMove() {
     const fen = chess.fen();
     engine.postMessage("position fen " + fen);
-    // what does this do ?
-    // I lost on depth 1 and on depth 11 similarly
-    engine.postMessage("go depth 3");
+    // Ask for 6 best moves, so we can pick the 4th
+    engine.postMessage("setoption name MultiPV value 6");
+    engine.postMessage("go depth 1");
   }
+
+  // Store multipv lines
+  let multipvMoves = [];
+
+  // 
+  let stockfishDiff = 2; // first 10 moves, ${stockfishDiff}th best move, then ${stockfishDiff + 1} to ${stockfishDiff + 3} best moves
+  let hardMode = false; // true disables the multipv logic and always picks the stockfishDiff-th best move
 
   engine.onmessage = function (event) {
     const line = event.data;
+    if (line.startsWith("info") && line.includes("multipv")) {
+      const multipvMatch = line.match(/multipv (\d+)/);
+      const pvMatch = line.match(/ pv ([a-h][1-8][a-h][1-8][qrbn]?)/);
+      if (multipvMatch && pvMatch) {
+        const multipvNum = parseInt(multipvMatch[1], 10);
+        const move = pvMatch[1];
+        multipvMoves[multipvNum - 1] = move;
+      }
+    }
     if (line.startsWith("bestmove")) {
-      const move = line.split(" ")[1];
+      let move = null;
+      const moveNumber = chess.history().length;
+      let pickIndexes = [];
+
+      if (typeof hardMode !== "undefined" && hardMode) {
+        pickIndexes = [stockfishDiff];
+      } else if (moveNumber < 10) {
+        pickIndexes = [stockfishDiff];
+      } else {
+        pickIndexes = [stockfishDiff + 1, stockfishDiff + 2, stockfishDiff + 3];
+      }
+
+      for (let idx of pickIndexes) {
+        if (multipvMoves.length > idx && multipvMoves[idx]) {
+          move = multipvMoves[idx];
+          break;
+        }
+      }
+
+      if (!move) {
+        move = line.split(" ")[1];
+      }
+
+      multipvMoves = []; 
       if (move && move !== "(none)") {
         chess.move({
           from: move.slice(0, 2),
@@ -161,7 +198,6 @@ export function setupInteraction(
 
       alert(message);
 
-      // disable controls and clear highlights
       controls.enabled = false;
       highlights.clear();
       selectionCircle.visible = false;
@@ -195,28 +231,25 @@ export function setupInteraction(
   function toggleRightClickHighlight(file, rank) {
     const key = `${file},${rank}`;
     if (rightClickHighlights.has(key)) {
-      // Remove highlight
       const mesh = rightClickHighlights.get(key);
       scene.remove(mesh);
       mesh.geometry.dispose();
       mesh.material.dispose();
       rightClickHighlights.delete(key);
     } else {
-      // Add highlight
       const mesh = boardGroup.children.find(
         (sq) => sq.userData.file === file && sq.userData.rank === rank,
       );
       if (!mesh) return;
       const geom = new THREE.PlaneGeometry(1, 1);
       const mat = new THREE.MeshBasicMaterial({
-        color: 0xff0000, // red
+        color: 0xff0000,
         transparent: true,
         opacity: 0.7,
         depthWrite: false,
       });
       const highlightMesh = new THREE.Mesh(geom, mat);
       highlightMesh.rotation.x = -Math.PI / 2;
-      // Set y to be exactly the same as the square (level with the square)
       highlightMesh.position.set(
         mesh.position.x,
         mesh.position.y,
@@ -230,7 +263,6 @@ export function setupInteraction(
   domEl.addEventListener("contextmenu", (e) => e.preventDefault());
 
   domEl.addEventListener("pointerdown", (e) => {
-    // right-click toggles highlight on square
     if (e.button === 2) {
       const info = getBoardInfo(e);
 
@@ -238,7 +270,6 @@ export function setupInteraction(
         toggleRightClickHighlight(info.file, info.rank);
       }
 
-      // Remove left-click highlights when right-clicking
       highlights.clear();
       selectionCircle.visible = false;
       removeSquareHighlight();
@@ -251,7 +282,6 @@ export function setupInteraction(
     }
     const info = getBoardInfo(e);
 
-    // if we already have a selection, and click a legal square → move
     if (selectedMesh && info && legalMoves.find((m) => m.to === info.square)) {
       chess.move({ from: selectedFrom, to: info.square });
       renderPieces(chess, piecesGroup);
@@ -260,15 +290,12 @@ export function setupInteraction(
       return;
     }
 
-    // if click off-board (and we had selection), cancel
     if (!info && selectedMesh) {
       clearSelection();
       return;
     }
 
-    // if not selecting currently, try picking a piece
     if (!selectedMesh && info) {
-      // find piece at that square
       const candidate = piecesGroup.children.find(
         (m) =>
           Math.abs(m.position.x - info.point.x) < 0.5 &&
@@ -279,14 +306,12 @@ export function setupInteraction(
       const moves = chess.moves({ square: info.square, verbose: true });
       if (!moves.length) return;
 
-      // select it
       selectedMesh = candidate;
       selectedFrom = info.square;
       originalPosition.copy(candidate.position);
       legalMoves = moves;
       showHighlights(moves);
 
-      // show ring under the piece
       selectionCircle.position.set(
         originalPosition.x,
         0.05,
@@ -305,8 +330,6 @@ export function setupInteraction(
     if (!info) return;
     selectedMesh.position.x = info.point.x;
     selectedMesh.position.z = info.point.z;
-
-    // Tweak this
     selectedMesh.position.y = 0.5;
   });
 
@@ -335,11 +358,8 @@ export function setupInteraction(
       selectedCPiece = null;
       highlights.clear();
       removeSquareHighlight();
-      // Do not remove right-click highlights here
       return;
     }
-
-    // Do not remove right-click highlights on left click
 
     if (selectedCPiece && selectedFrom && legalMoves.length) {
       const move = legalMoves.find((m) => m.to === info.square);
@@ -381,7 +401,7 @@ export function setupInteraction(
         0.05,
         selectedCPiece.position.z,
       );
-      selectionCircle.visible = legalMoves.length > 0; // this is a hack, not a solution
+      selectionCircle.visible = legalMoves.length > 0;
       controls.enabled = false;
     } else {
       highlights.clear();
