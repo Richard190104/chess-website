@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
 var selectedCPiece = null;
+let player = "w";
 const engine = new Worker("./js/stockfish-nnue-16-single.js");
 engine.postMessage("uci");
 engine.postMessage("ucinewgame");
@@ -22,7 +23,6 @@ export function setupInteraction(
   let selectedFrom = null;
   let originalPosition = new THREE.Vector3();
   let legalMoves = [];
-
   let dragged = false;
 
   // highlight groups
@@ -99,12 +99,30 @@ export function setupInteraction(
 
     renderPieces(chess, piecesGroup);
 
+    player = player === "w" ? "b" : "w";
+
+    if (player === "w") {
+      camera.position.set(3.5, 10, -5);
+    } else {
+      camera.position.set(3.5, 10, 12);
+    }
+    // this must be here, otherwise we wont see the board until moving it.
+    // just what the fuck THREE.js ?
+    camera.lookAt(new THREE.Vector3(3.5, 0, 3.5));
+
     engine.postMessage("ucinewgame");
+
+    if (chess.turn() !== player) {
+      askStockfishToMove();
+    }
+    checkGameStatus();
   }
 
   function askStockfishToMove() {
     const fen = chess.fen();
     engine.postMessage("position fen " + fen);
+    // what does this do ?
+    // I lost on depth 1 and on depth 11 similarly
     engine.postMessage("go depth 3");
   }
 
@@ -119,9 +137,42 @@ export function setupInteraction(
           promotion: "q",
         });
         renderPieces(chess, piecesGroup);
+        checkGameStatus();
       }
     }
   };
+
+  function checkGameStatus() {
+    if (chess.game_over()) {
+      let message = "";
+
+      if (chess.in_checkmate()) {
+        const winner = chess.turn() === "w" ? "Black" : "White";
+        message = `${winner} wins by checkmate!`;
+      } else if (chess.in_stalemate()) {
+        message = "Game drawn by stalemate";
+      } else if (chess.in_threefold_repetition()) {
+        message = "Game drawn by threefold repetition";
+      } else if (chess.insufficient_material()) {
+        message = "Game drawn by insufficient material";
+      } else if (chess.in_draw()) {
+        message = "Game drawn by 50-move rule";
+      }
+
+      alert(message);
+
+      // disable controls and clear highlights
+      controls.enabled = false;
+      highlights.clear();
+      selectionCircle.visible = false;
+      removeSquareHighlight();
+      selectedMesh = null;
+      selectedFrom = null;
+      selectedCPiece = null;
+      legalMoves = [];
+      removeAllRightClickHighlights();
+    }
+  }
 
   function removeSquareHighlight() {
     if (squareHighlight) {
@@ -204,6 +255,7 @@ export function setupInteraction(
     if (selectedMesh && info && legalMoves.find((m) => m.to === info.square)) {
       chess.move({ from: selectedFrom, to: info.square });
       renderPieces(chess, piecesGroup);
+      checkGameStatus();
       clearSelection();
       return;
     }
@@ -253,8 +305,9 @@ export function setupInteraction(
     if (!info) return;
     selectedMesh.position.x = info.point.x;
     selectedMesh.position.z = info.point.z;
-    selectedMesh.position.y = 0.5; // Tweak this
-    console.log("Pointer moved");
+
+    // Tweak this
+    selectedMesh.position.y = 0.5;
   });
 
   domEl.addEventListener("pointerup", (e) => {
@@ -264,14 +317,14 @@ export function setupInteraction(
     if (info && legalMoves.find((m) => m.to === info.square)) {
       chess.move({ from: selectedFrom, to: info.square });
       renderPieces(chess, piecesGroup);
+      checkGameStatus();
 
-      if (chess.turn() === "b") {
+      if (chess.turn() !== player) {
         askStockfishToMove();
       }
     }
     domEl.releasePointerCapture(e.pointerId);
     clearSelection();
-    console.log("Pointer released");
   });
 
   domEl.addEventListener("click", (e) => {
@@ -293,6 +346,8 @@ export function setupInteraction(
       if (move) {
         chess.move({ from: selectedFrom, to: info.square });
         renderPieces(chess, piecesGroup);
+        checkGameStatus();
+
         selectedCPiece = null;
         selectedFrom = null;
         legalMoves = [];
@@ -301,7 +356,7 @@ export function setupInteraction(
         controls.enabled = true;
         removeSquareHighlight();
 
-        if (chess.turn() === "b") {
+        if (chess.turn() !== player) {
           askStockfishToMove();
         }
         return;
@@ -335,8 +390,6 @@ export function setupInteraction(
       selectedFrom = null;
       legalMoves = [];
     }
-
-    console.log("Clicked on square:");
   });
 
   document.getElementById("restart-btn").addEventListener("click", () => {
