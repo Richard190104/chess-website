@@ -59,7 +59,7 @@ canvas {
   top: 50%;
   left: 50%;
   transform: translate(0%, -50%);
-  
+
   left: 20px;
   z-index: 1000;
   display: flex;
@@ -82,7 +82,6 @@ canvas {
   background-color: #555;
 }
 
-
 .move-history-container {
   position: absolute;
   top: 80px;
@@ -91,9 +90,10 @@ canvas {
   max-height: 80vh;
   background: rgba(30, 36, 48, 0.92);
   border-radius: 12px;
-  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.18);
+  box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.18);
   padding: 18px 14px 14px 18px;
   overflow-y: auto;
+  scrollbar-width: none;
   z-index: 1000;
   color: #e0e6ef;
   font-size: 15px;
@@ -129,7 +129,6 @@ canvas {
   font-weight: 600;
 }
 
-
 #game-controls > div {
   display: flex;
   align-items: center;
@@ -155,7 +154,7 @@ canvas {
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
-  box-shadow: 0 1px 4px 0 rgba(44,54,70,0.10);
+  box-shadow: 0 1px 4px 0 rgba(44, 54, 70, 0.1);
 }
 
 #side-switch:hover {
@@ -179,3 +178,4 @@ canvas {
   color: #ffd700;
   font-size: 1rem;
 }
+

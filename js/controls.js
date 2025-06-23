@@ -23,7 +23,6 @@ if (controlsDiv) {
   sideSwitch.id = "side-switch";
   sideSwitch.textContent = "White";
 
-
   sideSwitch.addEventListener("click", () => {
     playerPieces = playerPieces === "w" ? "b" : "w";
     sideSwitch.textContent = playerPieces === "w" ? "White" : "Black";
@@ -57,7 +56,7 @@ if (controlsDiv) {
   diffSlider.id = "difficulty-slider";
   diffSlider.min = "1";
   diffSlider.max = "7";
-  diffSlider.value = 7-stockfishDiff;
+  diffSlider.value = 7 - stockfishDiff;
   diffSlider.style.width = "120px";
   diffSlider.style.marginRight = "8px";
 
@@ -68,8 +67,8 @@ if (controlsDiv) {
   diffValue.style.textAlign = "center";
 
   diffSlider.addEventListener("input", (e) => {
-    stockfishDiff = 7-parseInt(e.target.value, 10);
-    diffValue.textContent = 8-(stockfishDiff + 1).toString();
+    stockfishDiff = 7 - parseInt(e.target.value, 10);
+    diffValue.textContent = 8 - (stockfishDiff + 1).toString();
   });
 
   diffSlider.addEventListener("change", () => {
@@ -87,7 +86,6 @@ if (controlsDiv) {
   controlsDiv.insertBefore(sliderContainer, controlsDiv.firstChild.nextSibling);
 }
 
-
 var selectedCPiece = null;
 let player = "w";
 const engine = new Worker("./js/stockfish-nnue-16-single.js");
@@ -97,10 +95,10 @@ engine.postMessage("ucinewgame");
 const moveHistoryContainer = document.querySelector(".move-history-container");
 if (moveHistoryContainer) {
   moveHistoryContainer.innerHTML = `
-    <h3>Moves</h3>
     <ul class="move-history-list"></ul>
   `;
 }
+
 const moveHistoryList = moveHistoryContainer
   ? moveHistoryContainer.querySelector(".move-history-list")
   : null;
@@ -249,8 +247,6 @@ export function setupInteraction(
   let multipvMoves = [];
   let multipvScores = [];
 
-  
-
   engine.onmessage = function (event) {
     const line = event.data;
     // Parse multipv lines and scores
@@ -264,7 +260,12 @@ export function setupInteraction(
         multipvMoves[multipvNum - 1] = move;
         if (scoreMatch) {
           // cp = centipawns, mate = mate in N
-          let score = scoreMatch[1] === "cp" ? parseInt(scoreMatch[2], 10) : (scoreMatch[1] === "mate" ? 10000 * Math.sign(parseInt(scoreMatch[2], 10)) : 0);
+          let score =
+            scoreMatch[1] === "cp"
+              ? parseInt(scoreMatch[2], 10)
+              : scoreMatch[1] === "mate"
+                ? 10000 * Math.sign(parseInt(scoreMatch[2], 10))
+                : 0;
           multipvScores[multipvNum - 1] = score;
         }
       }
@@ -272,7 +273,9 @@ export function setupInteraction(
     if (line.startsWith("bestmove")) {
       let move = null;
       // Find best score for reference
-      const bestScore = Math.max(...multipvScores.filter(s => typeof s === "number"));
+      const bestScore = Math.max(
+        ...multipvScores.filter((s) => typeof s === "number"),
+      );
 
       // Filter out moves that hang pieces (simple static exchange evaluation)
       // We'll use chess.js to check if the move loses material immediately
@@ -290,20 +293,29 @@ export function setupInteraction(
           b: 3,
           r: 5,
           q: 9,
-          k: 1000
+          k: 1000,
         };
 
         const movedValue = pieceValue[move.piece];
         const capturedValue = move.captured ? pieceValue[move.captured] : 0;
 
-        const attackers = tempChess.moves({ verbose: true }).filter(m => m.to === to && m.color !== tempChess.turn());
-        const defenders = tempChess.moves({ verbose: true }).filter(m => m.to === to && m.color === tempChess.turn());
+        const attackers = tempChess
+          .moves({ verbose: true })
+          .filter((m) => m.to === to && m.color !== tempChess.turn());
+        const defenders = tempChess
+          .moves({ verbose: true })
+          .filter((m) => m.to === to && m.color === tempChess.turn());
 
         // If we captured a more valuable piece than we risk, it's ok
         if (capturedValue >= movedValue) return false;
 
         // If square is attacked and not defended, and we're not gaining material, it's likely a blunder
-        if (attackers.length > 0 && defenders.length === 0 && movedValue >= 3 && capturedValue < movedValue) {
+        if (
+          attackers.length > 0 &&
+          defenders.length === 0 &&
+          movedValue >= 3 &&
+          capturedValue < movedValue
+        ) {
           return true;
         }
 
@@ -312,25 +324,27 @@ export function setupInteraction(
 
       // Only allow moves within 300cp of best and not hanging
       // Rebuild safeIndexes as array of objects with score, idx
-      let chosenIdx = null
+      let chosenIdx = null;
 
       let safeIndexesScored = multipvScores
         .map((score, idx) => ({ score, idx }))
-        .filter(obj =>
-          typeof obj.score === "number" &&
-          bestScore - obj.score <= (stockfishDiff+1) *50 &&
-          multipvMoves[obj.idx] &&
-          !isHangingMove(multipvMoves[obj.idx])
+        .filter(
+          (obj) =>
+            typeof obj.score === "number" &&
+            bestScore - obj.score <= (stockfishDiff + 1) * 50 &&
+            multipvMoves[obj.idx] &&
+            !isHangingMove(multipvMoves[obj.idx]),
         )
         .sort((a, b) => b.score - a.score); // sort best to worst
 
       // Extract sorted indexes
-      let safeIndexes = safeIndexesScored.map(obj => obj.idx);
+      let safeIndexes = safeIndexesScored.map((obj) => obj.idx);
 
       // Choose by stockfishDiff (fallback to best)
-      chosenIdx = safeIndexes[stockfishDiff] !== undefined
-        ? safeIndexes[stockfishDiff]
-        : safeIndexes[0];
+      chosenIdx =
+        safeIndexes[stockfishDiff] !== undefined
+          ? safeIndexes[stockfishDiff]
+          : safeIndexes[0];
 
       if (multipvMoves.length > chosenIdx && multipvMoves[chosenIdx]) {
         move = multipvMoves[chosenIdx];
