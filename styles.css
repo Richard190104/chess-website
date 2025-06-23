@@ -56,7 +56,10 @@ canvas {
 
 #game-controls {
   position: absolute;
-  top: 20px;
+  top: 50%;
+  left: 50%;
+  transform: translate(0%, -50%);
+  
   left: 20px;
   z-index: 1000;
   display: flex;
@@ -82,7 +85,7 @@ canvas {
 
 .move-history-container {
   position: absolute;
-  top: 20px;
+  top: 80px;
   right: 20px;
   width: 220px;
   max-height: 80vh;
@@ -102,7 +105,9 @@ canvas {
   font-size: 16px;
   color: #b6c2d1;
   font-weight: 600;
+  position: fixed;
   letter-spacing: 0.5px;
+  transform: translateY(-60px);
 }
 
 .move-history-list {

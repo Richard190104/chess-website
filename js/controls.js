@@ -97,7 +97,7 @@ engine.postMessage("ucinewgame");
 const moveHistoryContainer = document.querySelector(".move-history-container");
 if (moveHistoryContainer) {
   moveHistoryContainer.innerHTML = `
-    <h3>Move History</h3>
+    <h3>Moves</h3>
     <ul class="move-history-list"></ul>
   `;
 }
