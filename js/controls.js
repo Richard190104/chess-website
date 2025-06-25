@@ -146,7 +146,7 @@ export function setupInteraction(
   const highlights = new THREE.Group();
   const selectionCircle = new THREE.Mesh(
     new THREE.RingGeometry(0.3, 0.4, 32),
-    new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }),
   );
   selectionCircle.rotation.x = -Math.PI / 2;
   selectionCircle.visible = false;
@@ -179,9 +179,9 @@ export function setupInteraction(
       const r = parseInt(m.to[1], 10) - 1;
       const geom = new THREE.CircleGeometry(0.15, 32);
       const mat = new THREE.MeshBasicMaterial({
-        color: 0x00ff00,
+        color: 0xffffff,
         transparent: true,
-        opacity: 0.7,
+        opacity: 1.0,
         depthWrite: false,
       });
       const dot = new THREE.Mesh(geom, mat);

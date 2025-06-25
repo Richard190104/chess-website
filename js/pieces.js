@@ -18,9 +18,8 @@ const modelMap = {
 };
 const cache = {};
 
-// Custom colors and more matte look
-const WHITE_COLOR = 0xf5f5f5; // off-white
-const BLACK_COLOR = 0x222831; // dark gray-blue
+const WHITE_COLOR = 0xf5f5f5; 
+const BLACK_COLOR = 0x222831; 
 const METALNESS = 0.0;
 const ROUGHNESS = 0.98;
 
@@ -37,8 +36,8 @@ function setModelColor(model, color) {
 }
 
 export async function preloadModels() {
-  const squareSize = 1; // your board squares are 1×1
-  const scl = 0.7; // scale to 70% of square width (smaller than before)
+  const squareSize = 1;
+  const scl = 0.7; 
 
   const promises = Object.entries(modelMap).map(([code, path]) =>
     loader.loadAsync(path).then((gltf) => {
