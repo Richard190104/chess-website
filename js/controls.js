@@ -505,7 +505,7 @@ export function setupInteraction(
     const info = getBoardInfo(e);
 
     if (selectedMesh && info && legalMoves.find((m) => m.to === info.square)) {
-      chess.move({ from: selectedFrom, to: info.square });
+      chess.move({ from: selectedFrom, to: info.square, promotion: "q" });
       renderPieces(chess, piecesGroup);
       updateMoveHistory(chess);
       checkGameStatus();
@@ -561,7 +561,7 @@ export function setupInteraction(
     dragged = true;
     const info = getBoardInfo(e);
     if (info && legalMoves.find((m) => m.to === info.square)) {
-      chess.move({ from: selectedFrom, to: info.square });
+      chess.move({ from: selectedFrom, to: info.square, promotion: "q" });
       renderPieces(chess, piecesGroup);
       updateMoveHistory(chess);
       checkGameStatus();
@@ -588,7 +588,7 @@ export function setupInteraction(
     if (selectedCPiece && selectedFrom && legalMoves.length) {
       const move = legalMoves.find((m) => m.to === info.square);
       if (move) {
-        chess.move({ from: selectedFrom, to: info.square });
+        chess.move({ from: selectedFrom, to: info.square, promotion: "q" });
         renderPieces(chess, piecesGroup);
         updateMoveHistory(chess);
         checkGameStatus();
