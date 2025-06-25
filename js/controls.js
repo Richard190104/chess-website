@@ -145,6 +145,24 @@ function updateMoveHistory(chess) {
   if (moveHistoryList.lastChild) {
     moveHistoryList.lastChild.classList.add("last-move");
   }
+  // Auto-scroll to bottom with animation
+  if (moveHistoryList.parentElement) {
+    const container = moveHistoryList.parentElement;
+    const start = container.scrollTop;
+    const end = container.scrollHeight;
+    const duration = 300;
+    const startTime = performance.now();
+
+    function animateScroll(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      container.scrollTop = start + (end - start) * progress;
+      if (progress < 1) {
+        requestAnimationFrame(animateScroll);
+      }
+    }
+    requestAnimationFrame(animateScroll);
+  }
 }
 
 export function setupInteraction(
