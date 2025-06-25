@@ -110,7 +110,7 @@ canvas {
 .move-history-container {
   display: none; /* Hidden by default */
   position: absolute;
-  top: 5em;
+  top: calc(50% - 25vh);
   right: 10em;
   max-height: 40vh;
   background: rgba(30, 36, 48, 0.92);
