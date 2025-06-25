@@ -91,13 +91,15 @@ const moveHistoryList = moveHistoryContainer
   ? moveHistoryContainer.querySelector(".move-history-list")
   : null;
 
-function updateMoveHistory(chess) {
+const game_result = document.querySelector(".game-result");
 
+function updateMoveHistory(chess) {
   if (!moveHistoryList) return;
   const history = chess.history({ verbose: true });
   moveHistoryList.innerHTML = "";
-    if(history.length > 0) {
+  if (history.length > 0) {
     moveHistoryContainer.style.display = "block";
+    game_result.style.display = "none";
   }
   const pieceIcons = {
     w: { p: "♙", n: "♘", b: "♗", r: "♖", q: "♕", k: "♔" },
@@ -179,7 +181,6 @@ export function setupInteraction(
   let selectedFrom = null;
   let originalPosition = new THREE.Vector3();
   let legalMoves = [];
-  let dragged = false;
 
   const highlights = new THREE.Group();
   const selectionCircle = new THREE.Mesh(
@@ -245,6 +246,9 @@ export function setupInteraction(
 
   function resetGame() {
     chess.reset();
+
+    moveHistoryContainer.style.display = "none";
+    game_result.style.display = "none";
 
     clearSelection();
     removeAllRightClickHighlights();
@@ -433,8 +437,6 @@ export function setupInteraction(
         message = "Game drawn by 50-move rule";
       }
 
-      alert(message);
-
       controls.enabled = false;
       highlights.clear();
       selectionCircle.visible = false;
@@ -444,6 +446,9 @@ export function setupInteraction(
       selectedCPiece = null;
       legalMoves = [];
       removeAllRightClickHighlights();
+
+      game_result.style.display = "block";
+      game_result.innerHTML = `${message}`;
     }
   }
 
@@ -573,7 +578,6 @@ export function setupInteraction(
 
   domEl.addEventListener("pointerup", (e) => {
     if (!selectedMesh) return;
-    dragged = true;
     const info = getBoardInfo(e);
     if (info && legalMoves.find((m) => m.to === info.square)) {
       chess.move({ from: selectedFrom, to: info.square, promotion: "q" });

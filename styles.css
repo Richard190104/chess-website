@@ -161,6 +161,12 @@ canvas {
   gap: 1em;
 }
 
+.game-result {
+  display: none;
+  font-size: 1.2em;
+  color: #e0e6ef;
+}
+
 #side-switch {
   padding: 0.4375em 1em;
   background: linear-gradient(90deg, #3a4454 0%, #232e3a 100%);
