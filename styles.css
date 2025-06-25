@@ -108,7 +108,7 @@ canvas {
 }
 
 .move-history-container {
-  display: none; /* Hidden by default */
+  display: none; 
   position: absolute;
   top: 5em;
   right: 10em;
@@ -162,8 +162,10 @@ canvas {
 }
 
 .game-result {
-  display: none;
+  display: flex;
+  width: 100%;
   text-align: center;
+  justify-content: center;
   font-size: 1.2em;
   color: #ffd700;
 }

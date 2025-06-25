@@ -5,7 +5,7 @@
 - [ ] replace pieces
 - [x] add move history
 - [ ] mobile screen
-- [ ] sounds
+- [ ] sounds // TODO checkmate, game start
 - [ ] 2D
 - [x] Let the player choose the difficulty 
 - [x] Three fulled repetition not working // stockfish repeats infinitely
