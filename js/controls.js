@@ -718,3 +718,5 @@ export function setupInteraction(
   // Initial move history
   updateMoveHistory(chess);
 }
+
+game_result.style.display = "none";
