@@ -58,14 +58,16 @@ canvas {
 #game-controls {
   position: absolute;
   top: 50%;
-  left: 1.25em;
+  left: 5em;
   transform: translate(0%, -50%);
   z-index: 1000;
   display: flex;
   flex-direction: column;
   gap: 0.625em;
-  font-size: 1.2em;
-
+  padding: 2em;
+  background: rgba(30, 36, 48, 0.92);
+  box-shadow: 0 0.25em 1.5em 0 rgba(0, 0, 0, 0.18);
+  border-radius: 0.75em;
 }
 
 #game-controls button {
@@ -90,10 +92,25 @@ canvas {
   margin-bottom: 8px;
 }
 
+#game-controls > div {
+  display: flex;
+  align-items: center;
+  gap: 0.625em;
+  height: 100%;
+  margin-bottom: 0.5em;
+}
+
+#game-controls label {
+  font-weight: bold;
+  font-size: 1em;
+  color: #e0e6ef;
+  margin-right: 0.5em;
+}
+
 .move-history-container {
   position: absolute;
   top: 5em;
-  right: 3.125em;
+  right: 10em;
   max-height: 80vh;
   background: rgba(30, 36, 48, 0.92);
   border-radius: 0.75em;
@@ -143,20 +160,7 @@ canvas {
   gap: 1em;
 }
 
-#game-controls > div {
-  display: flex;
-  align-items: center;
-  gap: 0.625em;
-  height: 100%;
-  margin-bottom: 0.5em;
-}
 
-#game-controls label {
-  font-weight: bold;
-  font-size: 1.2em;
-  color: #e0e6ef;
-  margin-right: 0.5em;
-}
 
 #side-switch {
   padding: 0.4375em 1em;
