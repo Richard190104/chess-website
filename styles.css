@@ -83,6 +83,13 @@ canvas {
   background-color: #555;
 }
 
+.sideSwitch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
 .move-history-container {
   position: absolute;
   top: 5em;

@@ -7,12 +7,7 @@ const controlsDiv = document.getElementById("game-controls");
 
 // Add side switch to #game-controls
 if (controlsDiv) {
-  const sideSwitchContainer = document.createElement("div");
-  sideSwitchContainer.style.display = "flex";
-  sideSwitchContainer.style.alignItems = "center";
-  sideSwitchContainer.style.gap = "10px";
-  sideSwitchContainer.style.marginBottom = "8px";
-
+  const sideSwitchContainer = document.querySelector(".sideSwitch");
   const sideLabel = document.createElement("label");
   sideLabel.textContent = "Your Side:";
   sideLabel.style.fontWeight = "bold";
@@ -37,8 +32,8 @@ if (controlsDiv) {
   sideSwitchContainer.appendChild(sideSwitch);
   controlsDiv.insertBefore(sideSwitchContainer, controlsDiv.firstChild);
 }
-// Add difficulty slider to #game-controls
-if (controlsDiv) {
+const diffSliderContainer = document.querySelector(".difficulty-slider");
+if (controlsDiv && diffSliderContainer) {
   const diffLabel = document.createElement("label");
   diffLabel.textContent = "Difficulty:";
   diffLabel.setAttribute("for", "difficulty-slider");
@@ -72,7 +67,6 @@ if (controlsDiv) {
   });
 
   diffSlider.addEventListener("change", () => {
-    // Restart game on difficulty change
     const restartBtn = document.getElementById("restart-btn");
     if (restartBtn) {
       restartBtn.click();
@@ -83,7 +77,7 @@ if (controlsDiv) {
   sliderContainer.appendChild(diffSlider);
   sliderContainer.appendChild(diffValue);
 
-  controlsDiv.insertBefore(sliderContainer, controlsDiv.firstChild.nextSibling);
+  diffSliderContainer.appendChild(sliderContainer);
 }
 
 var selectedCPiece = null;
