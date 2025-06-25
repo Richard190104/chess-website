@@ -129,6 +129,13 @@ canvas {
   font-weight: 600;
 }
 
+.moveDiv {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
 #game-controls > div {
   display: flex;
   align-items: center;

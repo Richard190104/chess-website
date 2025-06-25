@@ -107,15 +107,45 @@ function updateMoveHistory(chess) {
   if (!moveHistoryList) return;
   const history = chess.history({ verbose: true });
   moveHistoryList.innerHTML = "";
+
+  const pieceIcons = {
+    w: { p: "♙", n: "♘", b: "♗", r: "♖", q: "♕", k: "♔" },
+    b: { p: "♟", n: "♞", b: "♝", r: "♜", q: "♛", k: "♚" },
+  };
+
   for (let i = 0; i < history.length; i += 2) {
-    const whiteMove = history[i]
-      ? `${history[i].from}-${history[i].to}${history[i].promotion ? "=" + history[i].promotion.toUpperCase() : ""}`
+    const white = history[i];
+    const black = history[i + 1];
+
+    const whiteMove = white
+      ? `${pieceIcons[white.color][white.piece]}${white.to}${white.promotion ? "=" + white.promotion.toUpperCase() : ""}`
       : "";
-    const blackMove = history[i + 1]
-      ? `${history[i + 1].from}-${history[i + 1].to}${history[i + 1].promotion ? "=" + history[i + 1].promotion.toUpperCase() : ""}`
+    const blackMove = black
+      ? `${pieceIcons[black.color][black.piece]}${black.to}${black.promotion ? "=" + black.promotion.toUpperCase() : ""}`
       : "";
+
     const li = document.createElement("li");
-    li.textContent = `${Math.floor(i / 2) + 1}. ${whiteMove}${blackMove ? "   " + blackMove : ""}`;
+    const moveDiv = document.createElement("div");
+    moveDiv.classList.add("moveDiv");
+
+    const moveNum = document.createElement("span");
+    moveNum.textContent = `${Math.floor(i / 2) + 1}.`;
+    moveNum.style.marginRight = "8px";
+    moveNum.style.fontWeight = "bold";
+
+    const whiteSpan = document.createElement("span");
+    whiteSpan.textContent = whiteMove;
+    whiteSpan.style.textAlign = "left";
+
+    const blackSpan = document.createElement("span");
+    blackSpan.textContent = blackMove;
+    blackSpan.style.flex = "1";
+
+    moveDiv.appendChild(moveNum);
+    moveDiv.appendChild(whiteSpan);
+    moveDiv.appendChild(blackSpan);
+
+    li.appendChild(moveDiv);
     moveHistoryList.appendChild(li);
   }
   if (moveHistoryList.lastChild) {
@@ -142,7 +172,6 @@ export function setupInteraction(
   let legalMoves = [];
   let dragged = false;
 
-  // highlight groups
   const highlights = new THREE.Group();
   const selectionCircle = new THREE.Mesh(
     new THREE.RingGeometry(0.3, 0.4, 32),
@@ -151,11 +180,9 @@ export function setupInteraction(
   selectionCircle.rotation.x = -Math.PI / 2;
   selectionCircle.visible = false;
 
-  // Square highlight mesh
   let squareHighlight = null;
 
-  // Store multiple right-click highlights
-  const rightClickHighlights = new Map(); // key: "file,rank", value: mesh
+  const rightClickHighlights = new Map();
 
   scene.add(highlights, selectionCircle);
 
