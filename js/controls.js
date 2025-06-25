@@ -447,7 +447,7 @@ export function setupInteraction(
       legalMoves = [];
       removeAllRightClickHighlights();
 
-      game_result.style.display = "block";
+      game_result.style.display = "flex";
       game_result.innerHTML = `${message}`;
     }
   }
