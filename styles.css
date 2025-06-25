@@ -162,7 +162,6 @@ canvas {
 }
 
 .game-result {
-  display: flex;
   text-align: center;
   font-size: 1.2em;
   color: #ffd700;

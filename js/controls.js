@@ -1,5 +1,8 @@
 import * as THREE from "three";
-
+const pieceSound = new Audio("./sounds/piece.mp3");
+const takesSound = new Audio("./sounds/takes.mp3");
+const checkSound = new Audio("./sounds/move-check.mp3");
+const castleSound = new Audio("./sounds/castle.mp3");
 let stockfishDiff = 3;
 // Player side switch
 let playerPieces = "w"; // default to white
@@ -276,11 +279,14 @@ export function setupInteraction(
   }
 
   function askStockfishToMove() {
-    const fen = chess.fen();
-    engine.postMessage("position fen " + fen);
-    // Ask for 6 best moves, so we can pick the 4th
-    engine.postMessage("setoption name MultiPV value 7");
-    engine.postMessage("go depth 1");
+    var randomDelay = Math.floor(Math.random() * 1000); 
+    setTimeout(() => {
+      const fen = chess.fen();
+      engine.postMessage("position fen " + fen);
+      engine.postMessage("setoption name MultiPV value 7");
+      engine.postMessage("go depth 1");
+
+    }, randomDelay); 
   }
 
   // Store multipv lines
@@ -380,7 +386,6 @@ export function setupInteraction(
       // Extract sorted indexes
       let safeIndexes = safeIndexesScored.map((obj) => obj.idx);
 
-      // Choose by stockfishDiff (fallback to best)
       chosenIdx =
         safeIndexes[stockfishDiff] !== undefined
           ? safeIndexes[stockfishDiff]
@@ -391,7 +396,6 @@ export function setupInteraction(
       }
 
       if (!move) {
-        // fallback: pick the best non-hanging move
         for (let idx = 0; idx < multipvMoves.length; idx++) {
           if (multipvMoves[idx] && !isHangingMove(multipvMoves[idx])) {
             move = multipvMoves[idx];
@@ -401,7 +405,6 @@ export function setupInteraction(
       }
 
       if (!move) {
-        // fallback: just use bestmove from Stockfish
         move = line.split(" ")[1];
       }
 
@@ -415,6 +418,23 @@ export function setupInteraction(
         });
         renderPieces(chess, piecesGroup);
         updateMoveHistory(chess);
+        const history = chess.history({ verbose: true });
+        if (
+          history.length > 0 &&
+          (history[history.length - 1].flags.includes("k") || history[history.length - 1].flags.includes("q"))
+        ) {
+            castleSound.currentTime = 0;
+            castleSound.play();
+        } else if (history.length > 0 && chess.in_check()) {
+          checkSound.currentTime = 0;
+          checkSound.play();
+        } else if (history.length > 0 && history[history.length - 1].captured) {
+          takesSound.currentTime = 0;
+          takesSound.play();
+        } else {
+          pieceSound.currentTime = 0;
+          pieceSound.play();
+        }
         checkGameStatus();
       }
     }
@@ -580,13 +600,33 @@ export function setupInteraction(
     if (!selectedMesh) return;
     const info = getBoardInfo(e);
     if (info && legalMoves.find((m) => m.to === info.square)) {
+      // Check if a piece is taken
+      const move = legalMoves.find((m) => m.to === info.square);
       chess.move({ from: selectedFrom, to: info.square, promotion: "q" });
       renderPieces(chess, piecesGroup);
+
+      if (
+        move &&
+        (move.flags.includes("k") || move.flags.includes("q"))
+      ) {
+        castleSound.currentTime = 0;
+        castleSound.play();
+      } else if (move && chess.in_check()) {
+        checkSound.currentTime = 0;
+        checkSound.play();
+      } else if (move && move.captured) {
+        takesSound.currentTime = 0;
+        takesSound.play();
+      } else {
+        pieceSound.currentTime = 0;
+        pieceSound.play();
+      }
+
       updateMoveHistory(chess);
       checkGameStatus();
 
       if (chess.turn() !== player) {
-        askStockfishToMove();
+      askStockfishToMove();
       }
     }
     domEl.releasePointerCapture(e.pointerId);
@@ -609,6 +649,22 @@ export function setupInteraction(
       if (move) {
         chess.move({ from: selectedFrom, to: info.square, promotion: "q" });
         renderPieces(chess, piecesGroup);
+         if (
+        move &&
+        (move.flags.includes("k") || move.flags.includes("q"))
+      ) {
+        castleSound.currentTime = 0;
+        castleSound.play(); // short delay between sounds
+      } else if (move && chess.in_check()) {
+        checkSound.currentTime = 0;
+        checkSound.play();
+      } else if (move && move.captured) {
+        takesSound.currentTime = 0;
+        takesSound.play();
+      } else {
+        pieceSound.currentTime = 0;
+        pieceSound.play();
+      }
         updateMoveHistory(chess);
         checkGameStatus();
 
