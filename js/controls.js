@@ -102,7 +102,6 @@ function updateMoveHistory(chess) {
   moveHistoryList.innerHTML = "";
   if (history.length > 0) {
     moveHistoryContainer.style.display = "block";
-    game_result.style.display = "none";
   }
   const pieceIcons = {
     w: { p: "♙", n: "♘", b: "♗", r: "♖", q: "♕", k: "♔" },
@@ -467,7 +466,7 @@ export function setupInteraction(
       legalMoves = [];
       removeAllRightClickHighlights();
 
-      game_result.style.display = "block";
+      game_result.style.display = "flex";
       game_result.innerHTML = `${message}`;
     }
   }

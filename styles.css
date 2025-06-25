@@ -162,10 +162,10 @@ canvas {
 }
 
 .game-result {
+  display: none;
   text-align: center;
   font-size: 1.2em;
   color: #ffd700;
-  
 }
 
 #side-switch {
