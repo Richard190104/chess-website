@@ -17,8 +17,8 @@ body {
   background: radial-gradient(circle at 60% 40%, #232e3a 0%, #181c22 100%);
   position: relative;
   z-index: 0;
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25);
-  border-radius: 18px;
+  box-shadow: 0 0.5em 2em 0 rgba(31, 38, 135, 0.25);
+  border-radius: 1.125em;
   overflow: hidden;
 }
 
@@ -30,13 +30,13 @@ body {
   background:
     repeating-linear-gradient(
       45deg,
-      rgba(44, 54, 70, 0.18) 0 48px,
-      transparent 48px 96px
+      rgba(44, 54, 70, 0.18) 0 3em,
+      transparent 3em 6em
     ),
     repeating-linear-gradient(
       -45deg,
-      rgba(30, 36, 48, 0.18) 0 48px,
-      transparent 48px 96px
+      rgba(30, 36, 48, 0.18) 0 3em,
+      transparent 3em 6em
     );
   pointer-events: none;
   opacity: 0.85;
@@ -47,9 +47,9 @@ canvas {
   position: relative;
   z-index: 2;
   box-shadow:
-    0 4px 24px 0 rgba(0, 0, 0, 0.25),
-    0 1.5px 6px 0 rgba(44, 54, 70, 0.12);
-  border-radius: 12px;
+    0 0.25em 1.5em 0 rgba(0, 0, 0, 0.25),
+    0 0.09375em 0.375em 0 rgba(44, 54, 70, 0.12);
+  border-radius: 0.75em;
   background: rgba(255, 255, 255, 0.01);
   transition: box-shadow 0.3s;
 }
@@ -57,24 +57,22 @@ canvas {
 #game-controls {
   position: absolute;
   top: 50%;
-  left: 50%;
+  left: 1.25em;
   transform: translate(0%, -50%);
-
-  left: 20px;
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0.625em;
 }
 
 #game-controls button {
-  padding: 10px 15px;
+  padding: 0.625em 0.9375em;
   background-color: #333;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 0.3125em;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.875em;
   transition: background-color 0.2s;
 }
 
@@ -84,30 +82,29 @@ canvas {
 
 .move-history-container {
   position: absolute;
-  top: 80px;
-  right: 20px;
-  width: 220px;
+  top: 5em;
+  right: 3.125em;
   max-height: 80vh;
   background: rgba(30, 36, 48, 0.92);
-  border-radius: 12px;
-  box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.18);
-  padding: 18px 14px 14px 18px;
+  border-radius: 0.75em;
+  box-shadow: 0 0.25em 1.5em 0 rgba(0, 0, 0, 0.18);
+  padding: 1.125em 0.875em 0.875em 1.125em;
   overflow-y: auto;
   scrollbar-width: none;
   z-index: 1000;
   color: #e0e6ef;
-  font-size: 15px;
+  font-size: 0.9375em;
   font-family: inherit;
 }
 
 .move-history-container h3 {
-  margin: 0 0 10px 0;
-  font-size: 16px;
+  margin: 0 0 0.625em 0;
+  font-size: 1em;
   color: #b6c2d1;
   font-weight: 600;
   position: fixed;
-  letter-spacing: 0.5px;
-  transform: translateY(-60px);
+  letter-spacing: 0.03125em;
+  transform: translateY(-3.75em);
 }
 
 .move-history-list {
@@ -117,9 +114,9 @@ canvas {
 }
 
 .move-history-list li {
-  padding: 4px 0;
+  padding: 0.25em 0;
   border-bottom: 1px solid rgba(44, 54, 70, 0.12);
-  font-size: 14px;
+  font-size: 0.875em;
   color: #e0e6ef;
 }
 
@@ -133,35 +130,35 @@ canvas {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: 1em;
 }
 
 #game-controls > div {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.625em;
   height: 100%;
-  margin-bottom: 8px;
+  margin-bottom: 0.5em;
 }
 
 #game-controls label {
   font-weight: bold;
-  font-size: 1rem;
+  font-size: 1em;
   color: #e0e6ef;
-  margin-right: 8px;
+  margin-right: 0.5em;
 }
 
 #side-switch {
-  padding: 7px 16px;
+  padding: 0.4375em 1em;
   background: linear-gradient(90deg, #3a4454 0%, #232e3a 100%);
   color: #fff;
   border: none;
-  border-radius: 6px;
-  font-size: 15px;
+  border-radius: 0.375em;
+  font-size: 0.9375em;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
-  box-shadow: 0 1px 4px 0 rgba(44, 54, 70, 0.1);
+  box-shadow: 0 0.0625em 0.25em 0 rgba(44, 54, 70, 0.1);
 }
 
 #side-switch:hover {
@@ -170,12 +167,12 @@ canvas {
 
 #difficulty-slider {
   accent-color: #ffd700;
-  width: 120px;
-  height: 4px;
-  border-radius: 2px;
+  width: 7.5em;
+  height: 0.25em;
+  border-radius: 0.125em;
   background: #232e3a;
   outline: none;
-  margin-right: 8px;
+  margin-right: 0.5em;
 }
 
 #game-controls span {
@@ -183,6 +180,5 @@ canvas {
   min-width: 1.5em;
   text-align: center;
   color: #ffd700;
-  font-size: 1rem;
+  font-size: 1em;
 }
-
