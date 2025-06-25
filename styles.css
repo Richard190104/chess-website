@@ -108,6 +108,7 @@ canvas {
 }
 
 .move-history-container {
+  display: none; /* Hidden by default */
   position: absolute;
   top: 5em;
   right: 10em;

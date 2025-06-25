@@ -92,10 +92,13 @@ const moveHistoryList = moveHistoryContainer
   : null;
 
 function updateMoveHistory(chess) {
+
   if (!moveHistoryList) return;
   const history = chess.history({ verbose: true });
   moveHistoryList.innerHTML = "";
-
+    if(history.length > 0) {
+    moveHistoryContainer.style.display = "block";
+  }
   const pieceIcons = {
     w: { p: "♙", n: "♘", b: "♗", r: "♖", q: "♕", k: "♔" },
     b: { p: "♟", n: "♞", b: "♝", r: "♜", q: "♛", k: "♚" },
