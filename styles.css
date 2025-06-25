@@ -64,6 +64,8 @@ canvas {
   display: flex;
   flex-direction: column;
   gap: 0.625em;
+  font-size: 1.2em;
+
 }
 
 #game-controls button {
@@ -117,7 +119,7 @@ canvas {
 .move-history-list li {
   padding: 0.25em 0;
   border-bottom: 1px solid rgba(44, 54, 70, 0.12);
-  font-size: 0.875em;
+  font-size: 1.2em;
   color: #e0e6ef;
 }
 
@@ -144,7 +146,7 @@ canvas {
 
 #game-controls label {
   font-weight: bold;
-  font-size: 1em;
+  font-size: 1.2em;
   color: #e0e6ef;
   margin-right: 0.5em;
 }
@@ -181,5 +183,5 @@ canvas {
   min-width: 1.5em;
   text-align: center;
   color: #ffd700;
-  font-size: 1em;
+  font-size: 1.2em;
 }
